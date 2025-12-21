@@ -1,0 +1,347 @@
+/* FONTS */
+/* FONTS */
+/* FONTS */
+@font-face {
+    font-family: "Outfit";
+    src: url(/Lit.jl/fonts/Outfit-VariableFont_wght.ttf) format("truetype");
+
+    font-style: bold;
+    font-weight: bold;
+    font-variant: bold;
+}
+
+@font-face {
+    font-family: "Outfit";
+    src: url(/Lit.jl/fonts/Outfit-VariableFont_wght.ttf) format("truetype");
+
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+}
+
+@font-face {
+    font-family: "Ubuntu";
+    src: url(/Lit.jl/fonts/Ubuntu-Regular.ttf) format("truetype");
+}
+
+@font-face {
+    font-family: "MaterialSymbolsOutlined";
+    src: url("/Lit.jl/fonts/MaterialSymbolsOutlined[FILL,GRAD,opsz,wght].ttf") format("truetype");
+}
+
+:root {
+    /* FONTS */
+    /* FONTS */
+    /* FONTS */
+
+    --body-font1: "Outfit", Arial, Helvetica, sans-serif;
+    --header-font1: "Outfit", Arial, Helvetica, sans-serif;
+    --font1: "Outfit", Arial, Helvetica, sans-serif;
+
+    /* COLORS */
+    /* COLORS */
+    /* COLORS */
+
+    --dd-focus-outline-color: #4b92e7;
+
+    --white-hs: 0, 0%;
+    --white: hsl(var(--white-hs), 100%);
+
+    --black-hs: 0, 0%;
+    --black: hsl(var(--black-hs), 0%);
+
+    --primary-hs: 240, 100%;
+    --primary: hsl(var(--primary-hs), 21%);
+
+    --grey95: hsl(var(--black-hs), 95%);
+    --grey90: hsl(var(--black-hs), 90%);
+    --grey85: hsl(var(--black-hs), 85%);
+    --grey80: hsl(var(--black-hs), 80%);
+    --grey75: hsl(var(--black-hs), 75%);
+    --grey70: hsl(var(--black-hs), 70%);
+    --grey65: hsl(var(--black-hs), 65%);
+    --grey60: hsl(var(--black-hs), 60%);
+    --grey55: hsl(var(--black-hs), 55%);
+    --grey50: hsl(var(--black-hs), 50%);
+    --grey45: hsl(var(--black-hs), 45%);
+    --grey40: hsl(var(--black-hs), 40%);
+    --grey35: hsl(var(--black-hs), 35%);
+    --grey30: hsl(var(--black-hs), 30%);
+    --grey25: hsl(var(--black-hs), 25%);
+    --grey20: hsl(var(--black-hs), 20%);
+    --grey15: hsl(var(--black-hs), 15%);
+    --grey10: hsl(var(--black-hs), 10%);
+    --grey5:  hsl(var(--black-hs), 5%);
+
+    --body-color1-hs: 231, 13%;
+    --body-color1: hsl(var(--body-color1-hs), 22%);
+
+    --header-color1-hs: 231, 13%;
+    --header-color1: hsl(var(--header-color1-hs), 22%);
+}
+
+/* BASE STYLES */
+/* BASE STYLES */
+/* BASE STYLES */
+
+html, body {
+    font-family: var(--body-font1);
+    color: var(--body-color1);
+    margin: 0;
+    height: 100%;
+}
+
+[hidden] { display: none !important }
+
+input[type="checkbox"] {margin: 0}
+input {font-size: inherit}
+
+*, ::before, ::after { box-sizing: border-box; margin: 0; padding: 0 }
+
+p {
+    margin-bottom: 0;
+}
+
+a, a:hover, a:visited {
+    text-decoration: none;
+    color: inherit;
+    line-height: 1;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--header-font1);
+    color: var(--header-color1);
+    display: flex;
+    align-items: center;
+    gap: .4em;
+}
+
+h1 { font-size: 2.5rem;  }
+h2 { font-size: 2rem;    }
+h3 { font-size: 1.75rem; }
+h4 { font-size: 1.5rem;  }
+h5 { font-size: 1.25rem; }
+h6 { font-size: 1rem;    }
+
+::-moz-focus-inner {border: none}
+
+:focus { outline: none }
+
+i.lt-material-icon {
+    font-family: "MaterialSymbolsOutlined";
+}
+
+input[type="color"] {
+    display: block;
+    border-radius: .5em;
+    border: none;
+    outline: none;
+    height: calc(1.1*1em + 0.5px + 2*4px + 2*5px + 2px);
+}
+
+input[type="color"]::-moz-color-swatch {
+    border-radius: 0;
+    border: none;
+    outline: none;
+    padding: 0;
+}
+
+input[type="color"]::-webkit-color-swatch-wrapper {
+    border-radius: 0;
+    border: none;
+    outline: none;
+    padding: 0;
+}
+
+input[type="color"]::-webkit-color-swatch {
+    border-radius: 0;
+    border: none;
+    outline: none;
+    padding: 0;
+}
+
+/* ICON */
+/* ICON */
+/* ICON */
+
+lt-icon {
+    font-family: "MaterialSymbolsOutlined";
+    font-style: normal;
+    line-height: 1;
+}
+
+/* IMAGE */
+/* IMAGE */
+/* IMAGE */
+
+img.lt-image {
+    max-width: 100%;
+}
+
+/* TABULATOR JS */
+/* TABULATOR JS */
+/* TABULATOR JS */
+
+.lt-dataframe {
+    max-width: 100%;
+}
+
+.tabulator-row.tabulator-row-even {
+    background-color: white;
+}
+
+.tabulator {
+    border: solid 1px #dfdfdf;
+    background: white;
+    border-radius: .5em;
+}
+
+.tabulator .tabulator-header {
+    border-bottom: none;
+    background: #f6f6f6;
+    font-weight: normal;
+    font-family: var(--header-font1);
+}
+
+.tabulator .tabulator-header .tabulator-col {
+    background: transparent;
+    border-bottom: solid 1px #dfdfdf;
+    border-right: solid 1px #dfdfdf;
+}
+
+.tabulator .tabulator-header .tabulator-col:hover {
+    background: #f0f0f0 !important;
+}
+
+.tabulator .tabulator-cell {
+    border-bottom: solid 1px #dfdfdf;
+    border-right: solid 1px #dfdfdf;
+}
+
+.tabulator .tabulator-cell:last-child {
+    border-right: none;
+}
+
+.tabulator .tabulator-row:last-child .tabulator-cell {
+    border-bottom: none;
+}
+
+.tabulator .tabulator-row:hover {
+    background: #fbfbfb;
+    cursor: default;
+}
+
+/* SELECTBOX */
+/* SELECTBOX */
+/* SELECTBOX */
+
+dd-input.lt-selectbox {
+    border-radius: .5rem;
+    overflow: hidden;
+    --input-after-font-size: .8rem;
+    --input-bg: #f4f4f4;
+    padding: 5px 8px;
+}
+
+dd-input.lt-selectbox .dd-input-container {
+    row-gap: 6px;
+}
+
+dd-input.lt-selectbox input {
+    flex-grow: 1;
+    padding: 4px 0 4px 0;
+    overflow: hidden;
+}
+
+dd-input.lt-selectbox .dd-clear-button {
+    --button-bg: #999;
+    --button-color: white;
+    --button-font-size: .5rem;
+    --button-border-radius: 100%;
+    --button-width: 9px;
+    min-width: 9px;
+    line-height: 0;
+    aspect-ratio: 1 / 1;
+}
+
+dd-input.lt-selectbox dd-selected-option {
+    border-radius: 0.25rem;
+    background: var(--primary);
+    color: white;
+    padding: 3px 6px 3px 6px;
+    font-size: 1em;
+    margin-right: 6px;
+
+    --button-font-weight: bold;
+    --button-margin-left: 6px;
+    --button-font-size: 1.2em;
+}
+
+dd-select.lt-selectbox {
+    background: white;
+    border-radius: .5rem;
+    border: 1px solid #f6f6f6;
+    box-shadow: 0px 20px 54px -20px #000000;
+
+    --button-padding: 12px;
+    --button-hover-bg: #f6f6f6;
+}
+
+/* INPUT */
+/* INPUT */
+/* INPUT */
+
+dd-input.lt-text-input {
+    border-radius: .5rem;
+    overflow: hidden;
+    padding: 5px 8px;
+    --input-bg: #f4f4f4;
+    --input-padding: 4px 0;
+}
+
+/* BUTTON */
+/* BUTTON */
+/* BUTTON */
+
+dd-button.lt-button {
+    --button-border-width: 1px;
+    --button-border-color: #d0d0d0;
+    --button-padding: 9.5px 14px;
+    --button-border-radius: .5rem;
+    --button-hover-bg: #f0f0f0;
+}
+
+dd-button.lt-button-style-primary {
+    --button-bg: var(--primary);
+    --button-color: white;
+    --button-border-color: var(--primary);
+    --button-hover-bg: hsl(var(--primary-hs), 30%);
+}
+
+dd-button.lt-button-style-naked {
+    --button-border-color: transparent;
+}
+
+dd-button lt-icon {
+    font-size: 1.2em;
+    line-height: 0.85;
+}
+
+dd-button .lt-material-icon {
+    font-style: normal;
+    font-size: 1.2em;
+    line-height: 0.85;
+}
+
+#lt_app_wrapper {
+    height: 100%;
+}
+
+.lt_fragment_container[data-lt-fragment-id=""] {
+    height: 100%;
+}
+
+.lt_fragment_container > * {
+    transition: opacity var(--transition-duration, 0.8s) ease-in-out;
+    opacity: var(--opacity, 1);
+}

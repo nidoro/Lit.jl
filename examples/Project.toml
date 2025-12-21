@@ -1,0 +1,10 @@
+[deps]
+HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
+JuliaC = "acedd4c2-ced6-4a15-accc-2607eb759ba2"
+Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+VegaDatasets = "0ae4a718-28b7-58ec-9efb-cded64d6d5b4"
+VegaLite = "112f6efa-9a02-5b7d-90c0-432ed331239a"
+Lit = "938144cb-3a24-4977-a248-a12dea9dd101"
+
+[sources]
+Lit = {path = "../"}
