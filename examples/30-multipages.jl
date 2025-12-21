@@ -7,9 +7,9 @@ using Main.Lit
 end
 
 if get_url_path() in ["/", "/avatar"]
-    include("avatar.jl")
+    include("10-avatar.jl")
 elseif get_url_path() == "/todo"
-    include("todo.jl")
+    include("02-todo.jl")
 elseif get_url_path() == "/seattle-weather"
-    include("seattle-weather.jl")
+    include("15-seattle-weather.jl")
 end

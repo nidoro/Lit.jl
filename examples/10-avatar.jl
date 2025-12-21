@@ -1,5 +1,4 @@
 using Main.Lit
-using HTTP
 using Random
 
 HAIR_OPTIONS      = ["bangs", "bowlCutHair", "braids", "bunHair", "curlyBob", "curlyShortHair", "froBun", "halfShavedHead", "mohawk", "shavedHead", "shortHair", "straightHair", "wavyBob"]

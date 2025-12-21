@@ -2,7 +2,7 @@
 
 julia_version = "1.12.2"
 manifest_format = "2.0"
-project_hash = "8d9a772fb7ddb71021cabb4272ee484aca0606e3"
+project_hash = "97623188047bf47e65dd3393631e0253e8a85070"
 
 [[deps.AliasTables]]
 deps = ["PtrArrays", "Random"]
@@ -559,7 +559,7 @@ uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 version = "1.12.0"
 
 [[deps.Lit]]
-deps = ["ArgParse", "JSON", "Libdl", "Logging", "Parameters", "Pkg", "Random", "SHA", "Sockets", "Tables"]
+deps = ["ArgParse", "JSON", "Libdl", "Logging", "Parameters", "Pkg", "REPL", "Random", "SHA", "Sockets", "Tables"]
 path = ".."
 uuid = "938144cb-3a24-4977-a248-a12dea9dd101"
 version = "0.1.0"
