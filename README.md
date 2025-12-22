@@ -1,4 +1,4 @@
-# Lit.jl
+# ✨ Lit.jl
 
 ### A new way of creating Julia web apps!
 
