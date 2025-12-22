@@ -1,4 +1,5 @@
 local
+Manifest.toml
 .kate*
 examples/.Lit/certs
 examples/.Lit/served-files/cache
