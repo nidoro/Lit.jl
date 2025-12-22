@@ -20,6 +20,7 @@ const WidgetKind_Image       = 5
 const WidgetKind_DataFrame   = 6
 const WidgetKind_TextInput   = 7
 const WidgetKind_ColorPicker = 8
+const WidgetKind_Code = 9
 
 @with_kw mutable struct ContainerInterface
     container::Union{Dict, Nothing} = nothing
@@ -320,6 +321,13 @@ macro fragment(block)
     )
 end
 
+function set_css_if_not_set(css::Dict, key::String, value::String)::Nothing
+    if !haskey(css, key)
+        css[key] = value
+    end
+    return nothing
+end
+
 function set_css_to_achieve_layout(css::Dict, parent::Dict, fill_width::Bool, fill_height::Bool)
     flex_grow = "0"
     width = nothing
@@ -346,7 +354,7 @@ function set_css_to_achieve_layout(css::Dict, parent::Dict, fill_width::Bool, fi
     if height !== nothing css["height"] = height end
 end
 
-function column(inner_func::Function=()->(); fill_width::Bool=false, fill_height::Bool=false, show_border::Bool=false, align_items::String="flex-start", justify_content::String="flex-start", gap::String=".8rem", max_width::String="100%", border::String="1px solid #d6d6d6", padding::String="none", margin::String="none", css::Dict=Dict())
+function column(inner_func::Function=()->(); fill_width::Bool=false, fill_height::Bool=false, show_border::Bool=false, align_items::String="flex-start", justify_content::String="flex-start", gap::String=".8rem", max_width::String="100%", max_height::String="initial", border::String="1px solid #d6d6d6", padding::String="none", margin::String="none", css::Dict=Dict())
     combined_css = Dict(
         "gap" => gap,
         "align-items" => align_items,
@@ -359,8 +367,9 @@ function column(inner_func::Function=()->(); fill_width::Bool=false, fill_height
     )
 
     set_css_to_achieve_layout(combined_css, top_container(), fill_width, fill_height)
-
+    set_css_if_not_set(css, "max-height", max_height)
     merge!(combined_css, css)
+
     return container(inner_func, css=combined_css)
 end
 
@@ -936,6 +945,63 @@ icon(icon::String; color::String="inherit", size::String="inherit", weight::Stri
 
 text(text::Any) = html("p", typeof(text) == String ? text : repr(text))
 
+# Code
+#------------
+function create_code(widgets::Dict{String, Widget}, parent::Dict, initial_value::String, css::Dict)::String
+    props = Dict(
+        "type" => "code",
+        "initial_value" => initial_value,
+        "css" => css,
+    )
+
+    props["local_id"] = bytes2hex(sha256(JSON.json(props)))
+    props["container_id"] = parent["id"]
+    props["id"] = "$(props["container_id"])/$(props["local_id"])"
+
+    push!(parent["children"], props)
+
+    widget = nothing
+
+    if haskey(widgets, props["id"])
+        widget = widgets[props["id"]]
+        widget.alive = true
+    else
+        widget = Widget()
+        widget.kind = WidgetKind_Code
+        widget.id = props["id"]
+        widget.fragment_id = top_fragment().id
+        widget.value = initial_value
+        widgets[props["id"]] = widget
+    end
+
+    widget.props = props
+
+    return widget.value
+end
+
+function code(initial_value::String=""; initial_value_file::Union{String, Nothing}=nothing, fill_width::Bool=true, max_width::String="100%", max_height::String="initial", padding::String="0", strip_whitespace::Bool=true, css::Dict=Dict("overflow-y" => "auto"))::String
+    task = task_local_storage("app_task")
+    widgets = task.session.widgets
+
+    if initial_value_file != nothing
+        initial_value = read(initial_value_file, String)
+    end
+
+    if !haskey(css, "flex-grow") && !haskey(css, "width")
+        set_css_to_achieve_layout(css, top_container(), fill_width, false)
+    end
+
+    set_css_if_not_set(css, "padding", padding)
+    set_css_if_not_set(css, "max-width", max_width)
+    set_css_if_not_set(css, "max-height", max_height)
+
+    if strip_whitespace
+        initial_value = String(strip(initial_value))
+    end
+
+    return create_code(widgets, top_container(), initial_value, css)
+end
+
 # Metric
 #-------------
 function metric(label::String, value::String, delta::String="", higher_is_better::Bool=true)
@@ -1431,6 +1497,10 @@ function start_lit(script_path::String)::Nothing
         return nothing
     end
 
+    if g.dev_mode
+        @warn "Starting Lit.jl on dev mode"
+    end
+
     global LIT_SO = get_dyn_lib_path()
     global LIBLIT = Libdl.dlopen(LIT_SO, Libdl.RTLD_NOW)
     g.sessions = Dict{Ptr{Cvoid}, Session}()
@@ -1610,8 +1680,7 @@ export  @app_startup, @session_startup, @page_startup, @register, @push, @pop,
         row, column, columns, container, fragment, @fragment,
         html, text, h1, h2, h3, h4, h5, h6, link, space, metric,
         button, image, dataframe, selectbox, radio, checkbox, checkboxes, text_input,
-        color_picker,
-        get_url_path,
+        code, color_picker, get_url_path,
         add_page, add_style, add_font, begin_page_config, end_page_config, set_title, set_description
 
 end # module

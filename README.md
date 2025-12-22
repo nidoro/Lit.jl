@@ -1,6 +1,6 @@
 # Lit.jl
 
-### A web app framework for Julia!
+### A new way of creating Julia web apps!
 
 > **Experimental**:
 > This package is in early stage of development. You are welcomed to try it out,

@@ -147,6 +147,10 @@ function clrChange(event) {
     }]);
 }
 
+function codeChange(event) {
+    // TODO
+}
+
 function applyCSS(elem, css) {
     for (const [key, value] of Object.entries(css)) {
         elem.style[key] = value;
@@ -431,6 +435,35 @@ function createAppElement(parent, props, fragmentId) {
             // TODO: NOTHING TO DO?
         }
 
+        newElements.push(elem);
+
+    } else if (props.type == "code") {
+        const elem = document.createElement("div");
+        applyCSS(elem, props.css);
+
+        const textarea = document.createElement("textarea");
+        elem.appendChild(textarea);
+
+        requestAnimationFrame(() => {
+            const cm = CodeMirror.fromTextArea(textarea, {
+                mode: "julia",
+                viewportMargin: Infinity,
+                readOnly: true,
+                indentWithTabs: false,
+                indentUnit: 4,
+                extraKeys: {
+                    Tab: function(cm) {
+                        const spaces = Array(cm.getOption("indentUnit") + 1).join(" ");
+                        cm.replaceSelection(spaces, "end");
+                    }
+                }
+            });
+
+            cm.on("change", codeChange);
+            cm.setValue(props.initial_value);
+        });
+
+        newElements.push(elem);
         newElements.push(elem);
     } else {
         console.error(`Unknown element type '${props.type}'`);

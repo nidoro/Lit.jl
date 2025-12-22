@@ -345,3 +345,11 @@ dd-button .lt-material-icon {
     transition: opacity var(--transition-duration, 0.8s) ease-in-out;
     opacity: var(--opacity, 1);
 }
+
+.CodeMirror {
+    background: #f0f0f0;
+    border-radius: .5em;
+    height: auto;
+    padding: .5em 1em;
+    font-size: .9rem;
+}
