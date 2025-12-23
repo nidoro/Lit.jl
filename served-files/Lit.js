@@ -472,6 +472,7 @@ function createAppElement(parent, props, fragmentId) {
             const cm = CodeMirror.fromTextArea(textarea, {
                 mode: "julia",
                 viewportMargin: Infinity,
+                lineNumbers: true,
                 readOnly: true,
                 indentWithTabs: false,
                 indentUnit: 4,

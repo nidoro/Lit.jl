@@ -303,7 +303,7 @@ dd-input.lt-text-input {
 /* BUTTON */
 /* BUTTON */
 
-dd-button.lt-button {
+dd-button.lt-button, a.lt-link {
     --button-border-width: 1px;
     --button-border-color: #d0d0d0;
     --button-padding: 9.5px 14px;
@@ -311,23 +311,23 @@ dd-button.lt-button {
     --button-hover-bg: #f0f0f0;
 }
 
-dd-button.lt-button-style-primary {
+.lt-button-style-primary {
     --button-bg: var(--primary);
     --button-color: white;
     --button-border-color: var(--primary);
     --button-hover-bg: hsl(var(--primary-hs), 30%);
 }
 
-dd-button.lt-button-style-naked {
+.lt-button.lt-button-style-naked, .lt-link.lt-button-style-naked {
     --button-border-color: transparent;
 }
 
-dd-button lt-icon {
+.lt-button lt-icon, .lt-link lt-icon {
     font-size: 1.2em;
     line-height: 0.85;
 }
 
-dd-button .lt-material-icon {
+.lt-button .lt-material-icon, .lt-link .lt-material-icon {
     font-style: normal;
     font-size: 1.2em;
     line-height: 0.85;
@@ -352,6 +352,12 @@ dd-button .lt-material-icon {
     height: auto;
     padding: .5em 1em;
     font-size: .9rem;
+}
+
+/* Gutter background */
+.CodeMirror-gutters {
+    background-color: #f0f0f0;
+    border-right: 1px solid #bbb;
 }
 
 .lt-sidebar {

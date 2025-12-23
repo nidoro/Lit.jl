@@ -66,7 +66,7 @@ end
     set_description("Avatar Creator using DiceBear | Lit.jl Example")
     add_font("Pacifico", ".Lit/served-files/fonts/Pacifico-Regular.ttf")
     add_style("""
-        h1, h2, h3, h4, h5, h6 {
+        h1 {
             font-family: Pacifico;
         }
     """)
@@ -81,19 +81,20 @@ end
     set_default_value("clr_skin", "#ffffff")
 end
 
-layout = centered_layout(
+set_page_layout(
+    style="centered",
     align_items="center",
     left_sidebar_initial_state="open",
     right_sidebar_initial_state="closed",
-    right_sidebar_initial_width="50%",
     right_sidebar_position="overlay",
+    right_sidebar_initial_width="50%",
     right_sidebar_toggle_labels=(
         "VIEW SOURCE <lt-icon lt-icon='material/code'></lt-icon>",
-        "HIDE SOURCE <lt-icon lt-icon='material/arrow_forward_ios'></lt-icon>",
+        nothing
     )
 )
 
-layout.main_area() do
+main_area() do
     h1("Avatar Creator", icon="material/auto_awesome")
 
     img_slot = column()
@@ -124,14 +125,20 @@ layout.main_area() do
 
     row(align_items="center", gap=".3rem", margin="2rem 0 0 0", css=Dict("opacity" => ".7", "font-size" => ".9rem")) do
         text("Check out")
-        link("DiceBear", "http://dicebear.com")
+        link("DiceBear", "http://dicebear.com", style="naked")
     end
 end
 
-layout.left_sidebar() do
-
+left_sidebar() do
+    column(fill_width=true, gap="0px") do
+        space(height="3rem")
+        h3("Lit Demo Apps", css=Dict("margin" => "0 0 .8rem .8rem", "white-space" => "nowrap"))
+        link("To-Do List", "/todo", style="naked", fill_width=true, css=Dict("justify-content" => "flex-start"))
+        link("Avatar Creator", "/avatar", style="naked", fill_width=true, css=Dict("justify-content" => "flex-start"))
+        link("Seattle Weather", "/seattle-weather", style="naked", fill_width=true, css=Dict("justify-content" => "flex-start"))
+    end
 end
 
-layout.right_sidebar() do
+right_sidebar() do
     code(initial_value_file=@__FILE__)
 end

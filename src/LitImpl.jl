@@ -51,6 +51,23 @@ function (container_interface::ContainerInterface)(inner_func::Function)::Nothin
     return nothing
 end
 
+@with_kw mutable struct Containers
+    containers::Vector{Union{ContainerInterface, Nothing}} = Vector{Union{ContainerInterface, Nothing}}()
+
+    main_area::Union{ContainerInterface, Nothing} = nothing
+    left_sidebar::Union{ContainerInterface, Nothing} = nothing
+    right_sidebar::Union{ContainerInterface, Nothing} = nothing
+end
+
+Base.getindex(containers::Containers, i) = containers.containers[i]
+
+function (containers::Containers)(inner_func::Function, column_index::Int)
+    push_container(containers.containers[column_index])
+    inner_func()
+    pop_container()
+    return nothing
+end
+
 @with_kw mutable struct Widget
     id::String = ""
     user_id::Union{String, Nothing} = nothing
@@ -99,6 +116,7 @@ end
     fragment_stack::Vector{Fragment} = Vector{Fragment}()
     payload::Dict = Dict()
     current_page::PageConfig = PageConfig()
+    layout::Containers = Containers()
 end
 
 const NetEventType            = Cint
@@ -410,23 +428,6 @@ function row(inner_func::Function=()->(); fill_width::Bool=false, fill_height::B
     return container(inner_func, css=combined_css)
 end
 
-@with_kw mutable struct Containers
-    containers::Vector{Union{ContainerInterface, Nothing}} = Vector{Union{ContainerInterface, Nothing}}()
-
-    main_area::Union{ContainerInterface, Nothing} = nothing
-    left_sidebar::Union{ContainerInterface, Nothing} = nothing
-    right_sidebar::Union{ContainerInterface, Nothing} = nothing
-end
-
-Base.getindex(containers::Containers, i) = containers.containers[i]
-
-function (containers::Containers)(inner_func::Function, column_index::Int)
-    push_container(containers.containers[column_index])
-    inner_func()
-    pop_container()
-    return nothing
-end
-
 function columns(amount_or_widths::Union{Int, Vector}; kwargs...)
     columns = Containers()
 
@@ -488,49 +489,9 @@ function create_sidebar(initial_state::String, side::String, initial_width::Stri
     return sidebar
 end
 
-function basic_layout(
+function set_page_layout(
         inner_func::Function=()->();
-
-        left_sidebar_initial_state::Union{Nothing, String}=nothing,
-        left_sidebar_initial_width::String="300px",
-        left_sidebar_position::String="slide-out",
-        left_sidebar_toggle_labels::Tuple{Union{String, Nothing}, Union{String, Nothing}}=(nothing, nothing),
-
-        right_sidebar_initial_state::Union{Nothing, String}=nothing,
-        right_sidebar_initial_width::String="300px",
-        right_sidebar_position::String="slide-out",
-        right_sidebar_toggle_labels::Tuple{Union{String, Nothing}, Union{String, Nothing}}=(nothing, nothing),
-    )::Containers
-
-    left_sidebar, right_sidebar = nothing, nothing
-
-    @push row(fill_width=true, fill_height=true)
-        if left_sidebar_initial_state != nothing
-            left_sidebar = create_sidebar(left_sidebar_initial_state, "left", left_sidebar_initial_width, left_sidebar_position, left_sidebar_toggle_labels)
-        end
-
-        main_area = column(fill_width=true, fill_height=true)
-
-        if right_sidebar_initial_state != nothing
-            right_sidebar = create_sidebar(right_sidebar_initial_state, "right", right_sidebar_initial_width, right_sidebar_position, right_sidebar_toggle_labels)
-        end
-    @pop
-
-    push_container(main_area)
-    inner_func
-    pop_container()
-
-    layout = Containers()
-    layout.containers = [main_area, left_sidebar, right_sidebar]
-    layout.main_area = main_area
-    layout.left_sidebar = left_sidebar
-    layout.right_sidebar = right_sidebar
-
-    return layout
-end
-
-function centered_layout(
-        inner_func::Function=()->();
+        style::String="basic",
         max_width::String="600px",
         align_items::String="flex-start",
 
@@ -545,29 +506,72 @@ function centered_layout(
         right_sidebar_toggle_labels::Tuple{Union{String, Nothing}, Union{String, Nothing}}=(nothing, nothing),
     )::Containers
 
-    containers = basic_layout(
-        left_sidebar_initial_state=left_sidebar_initial_state,
-        left_sidebar_initial_width=left_sidebar_initial_width,
-        left_sidebar_position=left_sidebar_position,
-        left_sidebar_toggle_labels=left_sidebar_toggle_labels,
+    # Initialize sidebars
+    #------------------------
+    left_sidebar, right_sidebar = nothing, nothing
 
-        right_sidebar_initial_state=right_sidebar_initial_state,
-        right_sidebar_initial_width=right_sidebar_initial_width,
-        right_sidebar_position=right_sidebar_position,
-        right_sidebar_toggle_labels=right_sidebar_toggle_labels,
-    )
+    @push row(fill_width=true, fill_height=true)
+        if left_sidebar_initial_state != nothing
+            left_sidebar = create_sidebar(left_sidebar_initial_state, "left", left_sidebar_initial_width, left_sidebar_position, left_sidebar_toggle_labels)
+        end
 
-    @push containers[1]
-        @push column(fill_width=true, fill_height=true, align_items="center", margin="3rem 0 0 0")
-            main_area = @push column(fill_width=true, fill_height=true, align_items=align_items, max_width=max_width)
-                inner_func()
-            @pop
-        @pop
+        main_area = column(fill_width=true, fill_height=true)
+
+        if right_sidebar_initial_state != nothing
+            right_sidebar = create_sidebar(right_sidebar_initial_state, "right", right_sidebar_initial_width, right_sidebar_position, right_sidebar_toggle_labels)
+        end
     @pop
 
-    containers.containers[1] = main_area
+    # Initialize main area
+    #-------------------------
+    if style == "basic"
+        # Nothing to do
+    elseif style == "centered"
+        @push main_area
+            @push column(fill_width=true, fill_height=true, align_items="center", margin="3rem 0 0 0")
+                main_area = column(fill_width=true, fill_height=true, align_items=align_items, max_width=max_width)
+            @pop
+        @pop
+    end
+
+    push_container(main_area)
+    inner_func()
+    pop_container()
+
+    containers = Containers()
+    containers.containers = [main_area, left_sidebar, right_sidebar]
     containers.main_area = main_area
+    containers.left_sidebar = left_sidebar
+    containers.right_sidebar = right_sidebar
+
+    task = task_local_storage("app_task")
+    task.layout = containers
+
     return containers
+end
+
+function main_area(inner_func::Function)::ContainerInterface
+    task = task_local_storage("app_task")
+    push_container(task.layout.main_area)
+    inner_func()
+    pop_container()
+    return task.layout.main_area
+end
+
+function left_sidebar(inner_func::Function)::ContainerInterface
+    task = task_local_storage("app_task")
+    push_container(task.layout.left_sidebar)
+    inner_func()
+    pop_container()
+    return task.layout.left_sidebar
+end
+
+function right_sidebar(inner_func::Function)::ContainerInterface
+    task = task_local_storage("app_task")
+    push_container(task.layout.right_sidebar)
+    inner_func()
+    pop_container()
+    return task.layout.right_sidebar
 end
 
 # Button
@@ -1037,12 +1041,18 @@ function html(tag::String, inner_html::String; attributes::Dict=Dict(), css::Dic
     return nothing
 end
 
-function link(label::String, url::String; new_tab::Bool=true)::Nothing
+function link(label::String, url::String; style::String="secondary", fill_width=false, new_tab::Bool=false, css::Dict=Dict())::Nothing
     icon = ""
     if new_tab
         icon = "<lt-icon lt-icon='material/open_in_new'></lt-icon>"
     end
-    html("a", "$label$icon", attributes=Dict("href" => url, "target" => new_tab ? "_blank" : ""), css=Dict("color" => "navy", "display" => "flex"))
+
+    combined_css = Dict("white-space" => "nowrap")
+    set_css_to_achieve_layout(css, top_container(), fill_width, false)
+
+    merge!(combined_css, css)
+
+    html("a", "$label$icon", css=combined_css, attributes=Dict("class" => "lt-link dd-button lt-button-style-$(style)", "href" => url, "target" => new_tab ? "_blank" : ""))
     return nothing
 end
 
@@ -1062,12 +1072,12 @@ function maybe_prepend_icon(text, icon::String, icon_color::String)
     return text
 end
 
-h1(text::String; icon::String="", icon_color::String="") = html("h1", maybe_prepend_icon(text, icon, icon_color))
-h2(text::String) = html("h2", text)
-h3(text::String) = html("h3", text)
-h4(text::String) = html("h4", text)
-h5(text::String) = html("h5", text)
-h6(text::String) = html("h6", text)
+h1(text::String; icon::String="", icon_color::String="", css=Dict()) = html("h1", maybe_prepend_icon(text, icon, icon_color), css=css)
+h2(text::String; icon::String="", icon_color::String="", css=Dict()) = html("h2", maybe_prepend_icon(text, icon, icon_color), css=css)
+h3(text::String; icon::String="", icon_color::String="", css=Dict()) = html("h3", maybe_prepend_icon(text, icon, icon_color), css=css)
+h4(text::String; icon::String="", icon_color::String="", css=Dict()) = html("h4", maybe_prepend_icon(text, icon, icon_color), css=css)
+h5(text::String; icon::String="", icon_color::String="", css=Dict()) = html("h5", maybe_prepend_icon(text, icon, icon_color), css=css)
+h6(text::String; icon::String="", icon_color::String="", css=Dict()) = html("h6", maybe_prepend_icon(text, icon, icon_color), css=css)
 
 icon(icon::String; color::String="inherit", size::String="inherit", weight::String="inherit") =
     html("lt-icon", "", attributes=Dict("lt-icon" => icon), css=Dict("color" => color, "font-size" => size, "font-weight" => "bold"))
@@ -1811,6 +1821,6 @@ export  @app_startup, @session_startup, @page_startup, @register, @push, @pop,
         button, image, dataframe, selectbox, radio, checkbox, checkboxes, text_input,
         code, color_picker, get_url_path,
         add_page, add_style, add_font, begin_page_config, end_page_config, set_title, set_description,
-        basic_layout, centered_layout
+        set_page_layout, main_area, left_sidebar, right_sidebar
 
 end # module
