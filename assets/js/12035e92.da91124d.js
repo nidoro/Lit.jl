@@ -1,0 +1,1 @@
+"use strict";(globalThis.webpackChunkdocs=globalThis.webpackChunkdocs||[]).push([[7826],{5183(o){o.exports=JSON.parse('{"metadata":{"permalink":"/Lit.jl/docs/blog","page":1,"postsPerPage":10,"totalPages":1,"totalCount":4,"blogDescription":"Blog","blogTitle":"Blog"}}')}}]);
