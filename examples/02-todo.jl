@@ -24,6 +24,11 @@ function delete_all_checked()
     filter!(item -> !item.status, session.items)
 end
 
+@page_startup begin
+    set_title("To-Do List | Lit.jl Demo")
+    set_description("To-Do List | Lit.jl Demo")
+end
+
 @session_startup begin
     session = Session([
         Item("Buy milk", false),
@@ -79,6 +84,7 @@ left_sidebar() do
     column(fill_width=true, gap="0px") do
         space(height="3rem")
         h5("Lit.jl Demo Apps", css=Dict("margin" => "0 0 .8rem .8rem", "white-space" => "nowrap", "color" => "#444"))
+        link("Counter", "/counter", style="naked", fill_width=true, css=Dict("justify-content" => "flex-start"))
         link("To-Do List", "/todo", style="naked", fill_width=true, css=Dict("justify-content" => "flex-start"))
         link("Avatar Creator", "/avatar", style="naked", fill_width=true, css=Dict("justify-content" => "flex-start"))
         link("Seattle Weather", "/seattle-weather", style="naked", fill_width=true, css=Dict("justify-content" => "flex-start"))

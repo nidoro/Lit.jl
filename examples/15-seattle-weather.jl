@@ -13,6 +13,9 @@ using Printf
 end
 
 @page_startup begin
+    set_title("Seattle Weather | Lit.jl Demo")
+    set_description("Seattle Weather | Lit.jl Demo")
+
     full_df = DataFrame(dataset("seattle-weather"))
     full_df.date = Date.(full_df.date)
     full_df.doy = dayofyear.(full_df.date)
@@ -315,6 +318,7 @@ left_sidebar() do
     column(fill_width=true, gap="0px") do
         space(height="3rem")
         h5("Lit.jl Demo Apps", css=Dict("margin" => "0 0 .8rem .8rem", "white-space" => "nowrap", "color" => "#444"))
+        link("Counter", "/counter", style="naked", fill_width=true, css=Dict("justify-content" => "flex-start"))
         link("To-Do List", "/todo", style="naked", fill_width=true, css=Dict("justify-content" => "flex-start"))
         link("Avatar Creator", "/avatar", style="naked", fill_width=true, css=Dict("justify-content" => "flex-start"))
         link("Seattle Weather", "/seattle-weather", style="naked", fill_width=true, css=Dict("justify-content" => "flex-start"))

@@ -18,7 +18,7 @@ const config: Config = {
   url: 'https://nidoro.github.io',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/Lit.jl/',
+  baseUrl: '/docs/build/',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.

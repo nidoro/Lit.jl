@@ -1,4 +1,8 @@
 {
     "hostname" : "localhost",
-    "port": 3443
+    "port": 3443,
+
+    "served-files-dir-map": {
+        "/docs": "../docs"
+    }
 }

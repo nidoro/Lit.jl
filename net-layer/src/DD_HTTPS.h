@@ -1531,12 +1531,18 @@ int HS_GetFileByURI(HS_CallbackArgs* args) {
         if (!HS_StartsWith(client->filePath, rootDir)) {
             HS_CloseConnection(client, HTTP_STATUS_NOT_FOUND);
         } else if (!HS_IsRegularFile(client->filePath)) {
-            if (server->error404File[0]) {
-                snprintf(client->filePath, PATH_MAX, "%s%s", rootDir, server->error404File);
-                httpStatus = HTTP_STATUS_NOT_FOUND;
-                strcpy(client->uri, server->error404File);
-            } else {
-                HS_CloseConnection(client, HTTP_STATUS_NOT_FOUND);
+            if (HS_IsDirectory(client->filePath)) {
+                strcat(client->filePath, "/index.html");
+            }
+
+            if (!HS_IsRegularFile(client->filePath)) {
+                if (server->error404File[0]) {
+                    snprintf(client->filePath, PATH_MAX, "%s%s", rootDir, server->error404File);
+                    httpStatus = HTTP_STATUS_NOT_FOUND;
+                    strcpy(client->uri, server->error404File);
+                } else {
+                    HS_CloseConnection(client, HTTP_STATUS_NOT_FOUND);
+                }
             }
         }
         
@@ -3035,6 +3041,7 @@ void HS_AddServedFilesDir(HS_Server* server, const char* vhostName, const char* 
     HS_RootDirMapEntry& entry = vhost->rootDirMap[vhost->rootDirMapSize++];
     strcpy(entry.uriPrefix, uriPrefix);
     realpath(path, entry.path);
+    printf("%s -- %s\n", uriPrefix, entry.path);
 
     if (!HS_EndsWith(entry.uriPrefix, "/")) {
         strcat(entry.uriPrefix, "/");

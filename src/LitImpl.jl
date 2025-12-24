@@ -1109,10 +1109,11 @@ text(text::Any) = html("p", typeof(text) == String ? text : repr(text))
 
 # Code
 #------------
-function create_code(widgets::Dict{String, Widget}, parent::Dict, initial_value::String, css::Dict)::String
+function create_code(widgets::Dict{String, Widget}, parent::Dict, initial_value::String, show_line_numbers::Bool, css::Dict)::String
     props = Dict(
         "type" => "code",
         "initial_value" => initial_value,
+        "show_line_numbers" => show_line_numbers,
         "css" => css,
     )
 
@@ -1141,7 +1142,7 @@ function create_code(widgets::Dict{String, Widget}, parent::Dict, initial_value:
     return widget.value
 end
 
-function code(initial_value::String=""; initial_value_file::Union{String, Nothing}=nothing, fill_width::Bool=true, max_width::String="100%", max_height::String="initial", padding::String="0", strip_whitespace::Bool=true, css::Dict=Dict("overflow-y" => "auto"))::String
+function code(initial_value::String=""; initial_value_file::Union{String, Nothing}=nothing, fill_width::Bool=true, max_width::String="100%", max_height::String="initial", padding::String="0", strip_whitespace::Bool=true, show_line_numbers::Bool=false, css::Dict=Dict("overflow-y" => "auto"))::String
     task = task_local_storage("app_task")
     widgets = task.session.widgets
 
@@ -1161,7 +1162,7 @@ function code(initial_value::String=""; initial_value_file::Union{String, Nothin
         initial_value = String(strip(initial_value))
     end
 
-    return create_code(widgets, top_container(), initial_value, css)
+    return create_code(widgets, top_container(), initial_value, show_line_numbers, css)
 end
 
 # Metric
