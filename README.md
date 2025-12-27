@@ -24,8 +24,7 @@ flexibility to customize it so it looks exactly how you want.
 ## Quick start
 ### 0. Install:
 ```julia
-using Pkg
-Pkg.add(url="https://github.com/nidoro/Lit.jl")
+julia -e 'using Pkg; Pkg.add(url="https://github.com/nidoro/Lit.jl")'
 ```
 
 ### 1. Implement `app.jl`:
@@ -39,8 +38,7 @@ end
 
 ### 2. Start REPL and run `app.jl`
 ```julia
-using Lit
-@start
+julia -m Lit
 ```
 
 ## Why choose Lit.jl?

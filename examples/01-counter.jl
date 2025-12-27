@@ -1,4 +1,4 @@
-using Main.Lit
+using Lit
 
 @page_startup begin
     set_title("Counter | Lit.jl Demo")

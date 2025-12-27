@@ -1,4 +1,4 @@
-using Main.Lit
+using Lit
 
 @register mutable struct Item
     name::String

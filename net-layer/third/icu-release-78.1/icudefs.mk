@@ -22,7 +22,7 @@ export PYTHONDONTWRITEBYTECODE = 1
 
 # Standard directories
 
-prefix = /home/davidoro/projects/Lit.jl/net-layer/third/icu-release-78.1/../../../local/build/icu-release-78.1
+prefix = /work/net-layer/third/icu-release-78.1/../../../local/build/icu-release-78.1
 exec_prefix = ${prefix}
 
 bindir = ${exec_prefix}/bin
@@ -142,7 +142,7 @@ LIBCFLAGS =
 # LIBCXXFLAGS are the flags for static and shared libraries.
 LIBCXXFLAGS = 
 # DEFAULT_LIBS are the default libraries to link against
-DEFAULT_LIBS = -lpthread -lm 
+DEFAULT_LIBS = -lpthread -ldl -lm 
 # LIB_M is for linking against the math library
 LIB_M = 
 # LIB_THREAD is for linking against the threading library

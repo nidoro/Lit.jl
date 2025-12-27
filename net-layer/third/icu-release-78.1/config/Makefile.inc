@@ -27,7 +27,7 @@
 # etc.  If ICU is not installed in this directory, you must change the
 # following line.  There should exist $(prefix)/include/unicode/utypes.h
 # for example.
-prefix = /home/davidoro/projects/Lit.jl/net-layer/third/icu-release-78.1/../../../local/build/icu-release-78.1
+prefix = /work/net-layer/third/icu-release-78.1/../../../local/build/icu-release-78.1
 exec_prefix = ${prefix}
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
@@ -200,7 +200,7 @@ INSTALL_PROGRAM  =  ${INSTALL}
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
 LDFLAGS = $(RPATHLDFLAGS)
-LIBS = -lpthread -lm  
+LIBS = -lpthread -ldl -lm  
 LIB_M = 
 LIB_VERSION = 78.1
 LIB_VERSION_MAJOR = 78

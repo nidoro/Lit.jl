@@ -183,12 +183,12 @@ macro register(def)
     struct_name = def.args[2]
 
     return esc(quote
-        if haskey(Main.Lit.USER_TYPES, $(QuoteNode(struct_name)))
-            global $struct_name = Main.Lit.USER_TYPES[$(QuoteNode(struct_name))]
+        if haskey(Lit.USER_TYPES, $(QuoteNode(struct_name)))
+            global $struct_name = Lit.USER_TYPES[$(QuoteNode(struct_name))]
         else
             $def
 
-            Main.Lit.USER_TYPES[$(QuoteNode(struct_name))] = $struct_name
+            Lit.USER_TYPES[$(QuoteNode(struct_name))] = $struct_name
         end
     end)
 end
@@ -236,11 +236,11 @@ function top_container()::Dict
 end
 
 macro push(container)
-    :(Main.Lit.push_container($(esc(container))))
+    :(Lit.push_container($(esc(container))))
 end
 
 macro pop()
-    :(Main.Lit.pop_container())
+    :(Lit.pop_container())
 end
 
 function push_fragment(frag::Fragment)::Nothing
@@ -350,7 +350,7 @@ end
 
 macro fragment(block)
     return :(
-        Main.Lit.fragment(() -> $(esc(block)))
+        Lit.fragment(() -> $(esc(block)))
     )
 end
 
@@ -1428,7 +1428,7 @@ function run_user_script()::Nothing
     Core.eval(app_mod, quote
         using Base
         using Core
-        const include = path -> Base.include(@__MODULE__, path)
+        const include = path -> Base.include(LitApp, path)
     end)
     Base.include(app_mod, g.script_path)
     return nothing
@@ -1583,7 +1583,7 @@ end
 
 macro app_startup(block)
     return :(
-        if Main.Lit.is_app_first_pass()
+        if Lit.is_app_first_pass()
             $(esc(block))
         end
     )
@@ -1591,7 +1591,7 @@ end
 
 macro session_startup(block)
     return :(
-        if Main.Lit.is_session_first_pass()
+        if Lit.is_session_first_pass()
             $(esc(block))
         end
     )
@@ -1599,10 +1599,10 @@ end
 
 macro page_startup(block)
     return :(
-        if Main.Lit.is_page_first_pass()
-            Main.Lit.begin_page_config(get_page(get_url_path()))
+        if Lit.is_page_first_pass()
+            Lit.begin_page_config(get_page(get_url_path()))
             $(esc(block))
-            Main.Lit.end_page_config()
+            Lit.end_page_config()
         end
     )
 end
@@ -1674,6 +1674,7 @@ function start_lit(script_path::String; host_name::String="localhost", port::Int
         return nothing
     end
 
+    global g = Global()
     g.dev_mode = dev_mode
 
     if g.dev_mode
@@ -1686,7 +1687,6 @@ function start_lit(script_path::String; host_name::String="localhost", port::Int
     g.first_pass = true
     g.initialized = true
     g.script_path = joinpath(START_CWD, script_path)
-
 
     # Dry run to try and initialize the app
     #-------------------------------------------
@@ -1880,45 +1880,22 @@ function __init__()
     end
 end
 
-macro start(file_path::String="app.jl", dev_mode::Bool=false)
-    impl_file = joinpath(@__DIR__, "LitImpl.jl")
-
-    return esc(:(
-        included = include($impl_file);
-        included.g.dev_mode = $dev_mode;
-        invokelatest(included.start_lit, $file_path)
-    ))
-end
-
-macro startdev(file_path::String="app.jl")
-    return esc(:(@start($file_path, true)))
-end
-
 function main(args::Vector{String})
-    global LIBLIT = Libdl.dlopen(LIT_SO)
-    g.sessions = Dict{Ptr{Cvoid}, Session}()
-    g.first_pass = true
-
-    s = ArgParseSettings()
+    cli = ArgParseSettings()
 
     @add_arg_table s begin
         "script"
-        help = "Lit.jl script"
+            help = "input file"
+            default = "app.jl"
     end
 
-    parsed = parse_args(s)
+    parsed = parse_args(cli)
 
     if parsed["script"] != nothing
-        start(parsed["script"])
+        start_lit(parsed["script"], dev_mode=true)
     end
-end
-
-if abspath(PROGRAM_FILE) == @__FILE__
-    main(ARGS)
 end
 
 @main
-
-export @start, @startdev
 
 end # module

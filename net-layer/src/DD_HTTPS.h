@@ -3,7 +3,6 @@
 
 #include <sys/stat.h>
 #include <stdlib.h>
-#include <math.h>
 #include <ctype.h>
 
 #include "libwebsockets.h"
@@ -62,9 +61,16 @@
 
 // Base64 Helpers
 //-----------------
+double HS_Ceil(double x) {
+    long long i = (long long)x;
+    if (x > 0 && x != (double)i)
+        return (double)(i + 1);
+    return (double)i;
+}
+
 int HS_EstimateDecodedBase64Size(const char* encodedB64) {
     float encodedSize = strlen(encodedB64);
-    int result = ceil(encodedSize*(3.f/4.f));
+    int result = HS_Ceil(encodedSize*(3.f/4.f));
     return result;
 }
 

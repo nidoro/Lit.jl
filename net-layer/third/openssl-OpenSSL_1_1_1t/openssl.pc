@@ -1,4 +1,4 @@
-prefix=/home/davidoro/projects/Lit.jl/net-layer/third/openssl-OpenSSL_1_1_1t/../../../local/build/openssl-OpenSSL_1_1_1t
+prefix=/work/net-layer/third/openssl-OpenSSL_1_1_1t/../../../local/build/openssl-OpenSSL_1_1_1t
 exec_prefix=${prefix}
 libdir=${exec_prefix}/lib
 includedir=${prefix}/include

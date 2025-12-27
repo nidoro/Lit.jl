@@ -1,4 +1,4 @@
-using Main.Lit
+using Lit
 using Random
 
 HAIR_OPTIONS      = ["bangs", "bowlCutHair", "braids", "bunHair", "curlyBob", "curlyShortHair", "froBun", "halfShavedHead", "mohawk", "shavedHead", "shortHair", "straightHair", "wavyBob"]
