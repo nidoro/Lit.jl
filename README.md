@@ -22,12 +22,12 @@ flexibility to customize it so it looks exactly how you want.
 ## Demo Web Apps
 
 ## Quick start
-### 0. Install:
+### 1. Install:
 ```julia
 julia -e 'using Pkg; Pkg.add(url="https://github.com/nidoro/Lit.jl")'
 ```
 
-### 1. Implement `app.jl`:
+### 2. Implement `app.jl`:
 ```julia
 # app.jl
 using Main.Lit
@@ -36,7 +36,7 @@ if button("Click me")
 end
 ```
 
-### 2. Start REPL and run `app.jl`
+### 3. Start REPL and run `app.jl`
 ```julia
 julia -m Lit
 ```
