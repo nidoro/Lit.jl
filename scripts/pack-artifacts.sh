@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Run from repo's root
+
 ARTIFACTS_DIR=local/build/artifacts-linux-x86_64
 
 tar -czf "$ARTIFACTS_DIR.tar.gz" -C "$ARTIFACTS_DIR" .
