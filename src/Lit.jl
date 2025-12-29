@@ -1690,7 +1690,7 @@ function open_in_default_browser(url::AbstractString)::Bool
     end
 end
 
-function start_lit(script_path::String; host_name::String="localhost", port::Int=3443, docs::Bool=false, dev_mode::Bool=false)::Nothing
+function start_app(script_path::String; host_name::String="localhost", port::Int=3443, docs::Bool=false, dev_mode::Bool=false)::Nothing
     if !isfile(script_path)
         @error "File not found: '$(script_path)'"
         return nothing
@@ -1891,8 +1891,8 @@ function stop_server()
     return ccall((:LT_StopServer, LIT_SO), Cvoid, ())
 end
 
-export  start_lit,
-        @app_startup, @session_startup, @page_startup, @register, @push, @pop,
+export  start_app,
+        @app_startup, @page_startup, @session_startup, @register, @push, @pop,
         push_container, pop_container, top_container,
         set_app_data, get_app_data, set_session_data, get_session_data,
         set_page_data, get_page_data,
@@ -1908,6 +1908,7 @@ export  start_lit,
 #---------------------------------
 
 function __init__()
+    # Check if the host system is supported.
     if !(Sys.islinux() && Sys.ARCH === :x86_64)
         printstyled("Error: ", color=:red, bold=true)
         println("Currently, Lit.jl is only supported on Linux x86_64.")
@@ -1927,7 +1928,7 @@ function main(args::Vector{String})
     parsed = parse_args(cli)
 
     if parsed["script"] != nothing
-        start_lit(parsed["script"])
+        start_app(parsed["script"])
     end
 end
 
