@@ -6,8 +6,6 @@
 > This package is in early stage of development. You are welcomed to try it out
 > and give us your feedback!
 
-## What is Lit.jl?
-
 `Lit.jl` is a web app framework for Julia that makes it easy for you to build
 awesome interactable pages for your Julia creations.
 
