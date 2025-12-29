@@ -28,6 +28,10 @@ flexibility to customize it so it looks exactly how you want.
 
 Check out our demo apps here.
 
+## Documentation
+
+You can find the documentation here.
+
 ## Quick start
 ### 1. Install (globally):
 ```julia
@@ -62,8 +66,6 @@ the elements in the web app, and `Lit.jl` takes care of displaying it in the
 user browser.
 - **Immediate mode UI**: No separation between the code for displaying widgets
 and the code for getting their values.
-
-## Documentation
 
 
 
