@@ -21,8 +21,8 @@ flexibility to customize it so it looks exactly how you want.
 
 ## Supported Platforms
 
-[x] Linux x86_64
-[ ] Windows (will come eventually)
+- [x] Linux x86_64
+- [ ] Windows (will come eventually)
 
 ## Demo Web Apps
 
