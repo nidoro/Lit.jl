@@ -11,6 +11,28 @@ using Tables
 using Random
 using Artifacts
 
+# Colored log utils
+#-------------------------
+const AC_Reset         = "\x1b[0m"
+const AC_CodeRed       = "\x1b[31m"
+const AC_CodeGreen     = "\x1b[32m"
+const AC_CodeYellow    = "\x1b[33m"
+const AC_CodeBlue      = "\x1b[34m"
+const AC_CodeMagenta   = "\x1b[35m"
+const AC_CodeCyan      = "\x1b[36m"
+
+const AC_CodeBold      = "\x1b[1m"
+const AC_ResetBold     = "\x1b[22m"
+
+const AC_Red     = (text::String) -> AC_CodeRed     * text * AC_Reset
+const AC_Green   = (text::String) -> AC_CodeGreen   * text * AC_Reset
+const AC_Yellow  = (text::String) -> AC_CodeYellow  * text * AC_Reset
+const AC_Blue    = (text::String) -> AC_CodeBlue    * text * AC_Reset
+const AC_Magenta = (text::String) -> AC_CodeMagenta * text * AC_Reset
+const AC_Cyan    = (text::String) -> AC_CodeCyan    * text * AC_Reset
+
+# WidgetKind
+#------------
 const WidgetKind             = Int
 const WidgetKind_None        = 0
 const WidgetKind_Button      = 1
@@ -1690,11 +1712,22 @@ function start_lit(script_path::String; host_name::String="localhost", port::Int
 
     # Dry run to try and initialize the app
     #-------------------------------------------
+    dry_run_payload = Dict(
+        "type" => "update",
+        "events" => [],
+        "location" => Dict(
+            "href" => "https://$(host_name):$(port)/",
+            "pathname" => "/",
+            "host" => "$(host_name):$(port)",
+            "hostname" => host_name, "search" => ""
+        )
+    )
+
     new_client(Cint(0))
     add_page("/", title="Lit App", description="Lit App")
 
-    @info "Dry Run: First pass over '$(script_path)'. @app_startup code blocks will run now."
-    wait(update(Cint(0), Dict("type" => "update", "events" => [], "location" => Dict("href" => "https://$(host_name):$(port)/", "pathname" => "/", "host" => "$(host_name):$(port)", "hostname" => host_name, "search" => ""))))
+    @info "Dry Run: First pass over '$(script_path)'.\n$(AC_Green("@app_startup")) code blocks will run now."
+    wait(update(Cint(0), dry_run_payload))
 
     if is_app_first_pass()
         @error "Dry run of app '$(script_path)' failed."
@@ -1707,10 +1740,13 @@ function start_lit(script_path::String; host_name::String="localhost", port::Int
 
     if true
         for page in g.pages
-            @info "Dry Run: First pass over '$(script_path)' as if loading page '$(page.uris[1])'. @page_startup code blocks will run now."
+            @info "Dry Run: First pass over '$(script_path)' as if loading page '$(page.uris[1])'.\n$(AC_Green("@page_startup")) code blocks will run now."
             g.sessions[Cint(0)].first_pass = true
 
-            wait(update(Cint(0), Dict("type" => "update", "events" => [], "location" => Dict("href" => "https://$(host_name):$(port)" * page.uris[1], "pathname" => page.uris[1], "host" => "$(host_name):$(port)", "hostname" => host_name, "search" => ""))))
+            dry_run_payload["location"]["href"] = "https://$(host_name):$(port)" * page.uris[1]
+            dry_run_payload["location"]["pathname"] = page.uris[1]
+
+            wait(update(Cint(0), dry_run_payload))
 
             if page.first_pass
                 @error "Dry run of page '$(page.uris[1])' failed."
@@ -1729,11 +1765,10 @@ function start_lit(script_path::String; host_name::String="localhost", port::Int
 
     server = listen(socket_path)
 
-    init_net_layer(host_name, port, docs, socket_path, joinpath(@__DIR__, ".."))
+    init_net_layer(host_name, port, docs, socket_path, joinpath(@__DIR__, ".."), g.dev_mode)
 
     conn = accept(server)
-    @info "NetLayerStarted"
-    @info "Now serving at https://$(host_name):$(port)"
+    @info "NetLayerStarted\nNow serving at https://$(host_name):$(port)"
 
     mkpath(".Lit/served-files/cache/pages")
     cp(joinpath(@__DIR__, "../served-files/LitPageTemplate.html"), ".Lit/served-files/cache/pages/first.html", force=true)
@@ -1782,10 +1817,10 @@ function start_lit(script_path::String; host_name::String="localhost", port::Int
         ev = take!(g.internal_events)
         if ev.ev_type == InternalEventType_Network
             if ev.data.ev_type == NetEventType_NewClient
-                @info "NetEventType_NewClient | $(ev.data.client_id)"
+                @debug "NetEventType_NewClient | $(ev.data.client_id)"
                 new_client(ev.data.client_id)
             elseif ev.data.ev_type == NetEventType_NewPayload
-                @info "NetEventType_NewPayload | $(ev.data.client_id)"
+                @debug "NetEventType_NewPayload | $(ev.data.client_id)"
                 payload_string = unsafe_string(ev.data.payload, ev.data.payload_size)
 
                 # NOTE: Now that we've copied the payload, it is safe to destroy the event.
@@ -1805,7 +1840,7 @@ function start_lit(script_path::String; host_name::String="localhost", port::Int
                 close(conn)
             end
         elseif ev.ev_type == InternalEventType_Task && ev.data.client_id != Cint(0)
-            @info "TaskFinished $(ev.data.client_id)"
+            @debug "TaskFinished $(ev.data.client_id)"
             session = g.sessions[ev.data.client_id]
 
             payload = Dict(
@@ -1823,7 +1858,7 @@ function start_lit(script_path::String; host_name::String="localhost", port::Int
 
     Libdl.dlclose(LIBLIT)
 
-    @info "AppLoopStopped"
+    @info "ServerLoopStopped"
     return nothing
 end
 
@@ -1835,12 +1870,12 @@ function destroy_net_event(ev::NetEvent)::Nothing
     ccall((:LT_DestroyNetEvent, LIT_SO), Cvoid, (NetEvent,), ev)
 end
 
-function init_net_layer(host_name::String, port::Int, docs::Bool, socket_path::String, package_root_dir::String)
+function init_net_layer(host_name::String, port::Int, docs::Bool, socket_path::String, package_root_dir::String, dev_mode::Bool)
     ccall(
         (:LT_InitNetLayer, LIT_SO),
         Cvoid,
-        (Cstring, Cint, Cint, Cint, Cstring, Cint, Cstring, Cint),
-        host_name, Cint(sizeof(host_name)), port, Cint(docs), socket_path, Cint(sizeof(socket_path)), package_root_dir, Cint(sizeof(package_root_dir))
+        (Cstring, Cint, Cint, Cint, Cstring, Cint, Cstring, Cint, Cint),
+        host_name, Cint(sizeof(host_name)), port, Cint(docs), socket_path, Cint(sizeof(socket_path)), package_root_dir, Cint(sizeof(package_root_dir)), Cint(dev_mode)
     )
 end
 

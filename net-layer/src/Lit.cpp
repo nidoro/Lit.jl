@@ -60,6 +60,7 @@ struct LT_Global {
     char appHostName[PATH_MAX];
     int appPort;
     bool serveDocs;
+    bool devMode;
 
     HS_Server hserver;
 
@@ -268,7 +269,7 @@ int HS_CALLBACK(handleEvent, args) {
 
                 if (wcClient) {
                     if (ev.type == LT_AppEventType_NewPayload) {
-                        LU_Log("AppEventType_NewPayload | %d | %.*s", ev.clientId, MIN(ev.payloadSize-LWS_PRE, 256), ev.payload+LWS_PRE);
+                        LU_Log(LU_Debug, "AppEventType_NewPayload | %d | %.*s", ev.clientId, MIN(ev.payloadSize-LWS_PRE, 256), ev.payload+LWS_PRE);
 
                         HS_Packet packet = {
                             .buffer = ev.payload,
@@ -319,10 +320,14 @@ void LT_HandleSigInt(void* data) {
     close(g.fdSocket);
 
     printf("\r  \n");
-    LU_Log(LU_Info, "ServerLoopInterrupted");
+    LU_Log(LU_Debug, "ServerLoopInterrupted");
 }
 
 void* LT_RunServer(void*) {
+    if (!g.devMode) {
+        HS_SetLogLevel(0);
+    }
+
     g.nextClientId = 1;
     g.clients = arralloc(LT_Client*, 100);
 
@@ -352,7 +357,10 @@ void* LT_RunServer(void*) {
     snprintf(tempBuffer, sizeof(tempBuffer), "%s/%s", g.litPackageRootPath, "served-files");
     HS_AddServedFilesDir(&g.hserver, "lit-app", "/Lit.jl", tempBuffer);
 
-    // HS_SetVHostVerbosity(&g.hserver, "lit-app", 1);
+    if (g.devMode) {
+        HS_SetVHostVerbosity(&g.hserver, "lit-app", 1);
+    }
+
     HS_DisableFileCache(&g.hserver, "lit-app");
 
     if (g.serveDocs) {
@@ -365,6 +373,9 @@ void* LT_RunServer(void*) {
         HS_SetLWSVHostConfig(&g.hserver, "lit-companion", pt_serv_buf_size, HS_KILO_BYTES(12));
         HS_SetLWSProtocolConfig(&g.hserver, "lit-companion", "HTTP", rx_buffer_size, HS_KILO_BYTES(12));
         HS_InitFileServer(&g.hserver, "lit-companion", ".Lit/companion-host.json");
+        if (g.devMode) {
+            HS_SetVHostVerbosity(&g.hserver, "lit-companion", 1);
+        }
     }
 
     SG_RegisterHandler(SIGINT, LT_HandleSigInt, 0);
@@ -380,14 +391,21 @@ void* LT_RunServer(void*) {
     return 0;
 }
 
-void LT_InitNetLayer(const char* hostName, int hostNameSize, int port, bool serveDocs, const char* socketPath, int socketPathSize, const char* litPackageRootPath, int litPackageRootPathSize) {
+void LT_InitNetLayer(const char* hostName, int hostNameSize, int port, bool serveDocs, const char* socketPath, int socketPathSize, const char* litPackageRootPath, int litPackageRootPathSize, bool devMode) {
     LU_Disable(&LU_GlobalLogFile);
     LU_EnableStdout(&LU_GlobalLogFile);
     LU_DisableStderr(&LU_GlobalLogFile);
 
+    if (devMode) {
+        LU_SetLogLevel(LU_Verbose);
+    } else {
+        LU_SetLogLevel(LU_Important);
+    }
+
     strncpy(g.appHostName, hostName, hostNameSize);
     g.appPort = port;
     g.serveDocs = serveDocs;
+    g.devMode = devMode;
 
     strncpy(g.socketPath, socketPath, socketPathSize);
     strncpy(g.litPackageRootPath, litPackageRootPath, litPackageRootPathSize);
