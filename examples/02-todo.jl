@@ -1,11 +1,11 @@
 using Lit
 
-@register mutable struct Item
+@once mutable struct Item
     name::String
     status::Bool
 end
 
-@register mutable struct Session
+mutable struct Session
     items::Vector{Item}
 end
 

@@ -201,7 +201,7 @@ end
 
 g = Global()
 
-macro register(def)
+macro once(def)
     struct_name = def.args[2]
 
     return esc(quote
@@ -423,7 +423,23 @@ function set_css_to_achieve_layout(css::Dict, parent::Dict, fill_width::Bool, fi
     if height !== nothing css["height"] = height end
 end
 
-function column(inner_func::Function=()->(); fill_width::Bool=false, fill_height::Bool=false, show_border::Bool=false, align_items::String="flex-start", justify_content::String="flex-start", gap::String=".8rem", max_width::String="100%", max_height::String="initial", border::String="1px solid #d6d6d6", padding::String="none", margin::String="none", css::Dict=Dict(), attributes::Dict=Dict())
+function column(
+        inner_func::Function=()->();
+        fill_width::Bool=false,
+        fill_height::Bool=false,
+        align_items::String="flex-start",
+        justify_content::String="flex-start",
+        gap::String=".8rem",
+        max_width::String="100%",
+        max_height::String="initial",
+        show_border::Bool=false,
+        border::String="1px solid #d6d6d6",
+        padding::String="none",
+        margin::String="none",
+        css::Dict=Dict(),
+        attributes::Dict=Dict()
+    )::ContainerInterface
+
     combined_css = Dict(
         "gap" => gap,
         "align-items" => align_items,
@@ -442,7 +458,17 @@ function column(inner_func::Function=()->(); fill_width::Bool=false, fill_height
     return container(inner_func, css=combined_css, attributes=attributes)
 end
 
-function row(inner_func::Function=()->(); fill_width::Bool=false, fill_height::Bool=false, align_items::String="flex-start", justify_content::String="flex-start", margin::String="0", gap::String="0.8rem", css::Dict=Dict())
+function row(
+        inner_func::Function=()->();
+        fill_width::Bool=false,
+        fill_height::Bool=false,
+        align_items::String="flex-start",
+        justify_content::String="flex-start",
+        gap::String="0.8rem",
+        margin::String="0",
+        css::Dict=Dict()
+    )::ContainerInterface
+
     combined_css = Dict(
         "flex-direction" => "row",
         "gap" => gap,
@@ -457,7 +483,7 @@ function row(inner_func::Function=()->(); fill_width::Bool=false, fill_height::B
     return container(inner_func, css=combined_css)
 end
 
-function columns(amount_or_widths::Union{Int, Vector}; kwargs...)
+function columns(amount_or_widths::Union{Int, Vector}; kwargs...)::Containers
     columns = Containers()
 
     @push row(fill_width=true)
@@ -1526,7 +1552,9 @@ function update(client_id::Cint, payload::Dict)
             if widget.kind == WidgetKind_Button
                 widget.value = false
             end
-            widget.alive = false
+            if widget.fragment_id == fragment_id
+                widget.alive = false
+            end
         end
 
         # TODO: Although we receive a list of events from the front-end, at the
@@ -1690,7 +1718,7 @@ function open_in_default_browser(url::AbstractString)::Bool
     end
 end
 
-function start_app(script_path::String; host_name::String="localhost", port::Int=3443, docs::Bool=false, dev_mode::Bool=false)::Nothing
+function start_app(script_path::String="app.jl"; host_name::String="localhost", port::Int=3443, docs::Bool=false, dev_mode::Bool=false)::Nothing
     if !isfile(script_path)
         @error "File not found: '$(script_path)'"
         return nothing
@@ -1892,19 +1920,26 @@ function stop_server()
     return ccall((:LT_StopServer, LIT_SO), Cvoid, ())
 end
 
-export  start_app,
-        @app_startup, @page_startup, @session_startup, @register, @push, @pop,
-        push_container, pop_container, top_container,
-        set_app_data, get_app_data, set_session_data, get_session_data,
-        set_page_data, get_page_data,
-        get_default_value, set_default_value, get_value, set_value,
-        is_session_first_pass, is_app_first_pass, gen_resource_path,
-        row, column, columns, container, fragment, @fragment,
-        html, text, h1, h2, h3, h4, h5, h6, link, space, metric,
-        button, image, dataframe, selectbox, radio, checkbox, checkboxes, text_input,
-        code, color_picker, get_url_path,
-        add_page, add_style, add_font, begin_page_config, end_page_config, set_title, set_description,
-        set_page_layout, main_area, left_sidebar, right_sidebar
+# Interface Elements
+#--------------------
+export html, text, h1, h2, h3, h4, h5, h6, link, space, metric,
+button, image, dataframe, selectbox, radio, checkbox, checkboxes, text_input,
+code, color_picker
+
+# Layout Elements
+#-------------------
+export set_page_layout, main_area, left_sidebar, right_sidebar, row, column,
+columns, container
+
+# Application Logic
+#--------------------
+export start_app, @app_startup, @page_startup, @session_startup, @once, @push,
+@pop, push_container, pop_container, set_app_data, get_app_data, set_page_data,
+get_page_data, set_session_data, get_session_data, get_default_value,
+set_default_value, get_value, set_value, is_app_first_pass, is_page_first_pass,
+is_session_first_pass, gen_resource_path, fragment, @fragment, get_url_path,
+add_page, add_style, add_font, begin_page_config, end_page_config, set_title,
+set_description
 
 #---------------------------------
 

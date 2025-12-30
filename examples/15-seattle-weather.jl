@@ -6,7 +6,7 @@ using VegaDatasets
 using VegaLite
 using Printf
 
-@register mutable struct PageData
+mutable struct PageData
     full_df::DataFrame
     df_2014::DataFrame
     df_2015::DataFrame
