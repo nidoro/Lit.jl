@@ -33,12 +33,14 @@ and the code for getting their values.
 
 ## Quick start
 
-### 1. Install (globally):
+### 1. Install:
+
 ```bash
 $ julia -e 'using Pkg; Pkg.add(url="https://github.com/nidoro/Lit.jl")'
 ```
 
 ### 2. Implement `app.jl`:
+
 ```julia
 # app.jl
 using Lit
@@ -48,14 +50,18 @@ end
 ```
 
 ### 3. Start the app
-From the terminal:
-```bash
-$ julia -m Lit
-```
-or from REPL (recommended for faster app restart during development):
+
+From REPL (recommended for faster app restart during development):
+
 ```julia
 > using Lit
 > start_app()
+```
+
+Or from the terminal:
+
+```bash
+$ julia -m Lit
 ```
 
 ### 4. Open the app in your browser
