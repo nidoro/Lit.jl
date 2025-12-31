@@ -121,7 +121,7 @@ end
     set_title::Function = (args...; kwargs...)->()
     set_description::Function = (args...; kwargs...)->()
     add_font::Function = (args...; kwargs...)->()
-    add_style::Function = (args...; kwargs...)->()
+    add_css_rule::Function = (args...; kwargs...)->()
 end
 
 @with_kw mutable struct Fragment
@@ -1337,7 +1337,7 @@ function add_page(inner_func::Union{Function, Nothing}, uri::Union{String, Vecto
     page.title = title
     page.description = description
 
-    for func in [:set_title, :set_description, :add_font, :add_style]
+    for func in [:set_title, :set_description, :add_font, :add_css_rule]
         define_page_config_func(page, func)
     end
 
@@ -1354,14 +1354,14 @@ end
 
 add_page(uri::Union{String, Vector{String}}; title::String="", description::String="") = add_page(nothing, uri, title=title, description=description)
 
-function add_style(page::PageConfig, style::String)::Nothing
+function add_css_rule(page::PageConfig, style::String)::Nothing
     page.style *= style
     return nothing
 end
 
-function add_style(style::String)::Nothing
+function add_css_rule(style::String)::Nothing
     task = task_local_storage("app_task")
-    return add_style(task.current_page, style)
+    return add_css_rule(task.current_page, style)
 end
 
 function strip_prefix(str::String, prefix::String)::String
@@ -1372,7 +1372,7 @@ function strip_prefix(str::String, prefix::String)::String
 end
 
 function add_font(page::PageConfig, font_name::String, src_or_path::String)::Nothing
-    add_style(page, """
+    add_css_rule(page, """
         @font-face {
             font-family: "$(font_name)";
             src: url($(strip_prefix(src_or_path, ".Lit/served-files")));
@@ -1662,6 +1662,9 @@ function get_url_path()::String
     return task.payload["location"]["pathname"]
 end
 
+get_current_page()::PageConfig = get_page(get_url_path())
+is_on_page(page_path::String)::Bool = (page_path in get_current_page().uris)
+
 function lock_client(client_id::Cint)::Nothing
     ccall((:LT_LockClient, LIT_SO), Cvoid, (Cint,), client_id)
     return nothing
@@ -1929,16 +1932,16 @@ code, color_picker
 # Layout Elements
 #-------------------
 export set_page_layout, main_area, left_sidebar, right_sidebar, row, column,
-columns, container
+columns, container, @push, @pop, push_container, pop_container
 
 # Application Logic
 #--------------------
-export start_app, @app_startup, @page_startup, @session_startup, @once, @push,
-@pop, push_container, pop_container, set_app_data, get_app_data, set_page_data,
-get_page_data, set_session_data, get_session_data, get_default_value,
-set_default_value, get_value, set_value, is_app_first_pass, is_page_first_pass,
-is_session_first_pass, gen_resource_path, fragment, @fragment, get_url_path,
-add_page, add_style, add_font, begin_page_config, end_page_config, set_title,
+export start_app, @app_startup, @page_startup, @session_startup, @once,
+set_app_data, get_app_data, set_page_data, get_page_data, set_session_data,
+get_session_data, get_default_value, set_default_value, get_value, set_value,
+is_app_first_pass, is_page_first_pass, is_session_first_pass, gen_resource_path,
+fragment, @fragment, get_url_path, is_on_page, get_current_page, add_page,
+add_css_rule, add_font, begin_page_config, end_page_config, set_title,
 set_description
 
 #---------------------------------
