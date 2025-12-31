@@ -7,12 +7,12 @@ using Lit
     add_page("/seattle-weather")
 end
 
-if get_url_path() in ["/", "/counter"]
+if     is_on_page("/counter")
     include("01-counter.jl")
-elseif get_url_path() == "/todo"
+elseif is_on_page("/todo")
     include("02-todo.jl")
-elseif get_url_path() == "/avatar"
+elseif is_on_page("/avatar")
     include("10-avatar.jl")
-elseif get_url_path() == "/seattle-weather"
+elseif is_on_page("/seattle-weather")
     include("15-seattle-weather.jl")
 end
