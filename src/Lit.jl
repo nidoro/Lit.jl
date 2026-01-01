@@ -596,7 +596,7 @@ function set_page_layout(
 
     push_container(main_area)
     inner_func()
-    pop_container()
+    # pop_container()
 
     containers = Containers()
     containers.containers = [main_area, left_sidebar, right_sidebar]

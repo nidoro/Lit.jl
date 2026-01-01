@@ -4,6 +4,7 @@ Manifest.toml
 examples/.Lit/companion-host.json
 examples/.Lit/certs
 examples/.Lit/served-files/cache
+examples/data/
 
 net-layer/third/openssl-OpenSSL_1_1_1t/*.so*
 net-layer/third/openssl-OpenSSL_1_1_1t/*.a
