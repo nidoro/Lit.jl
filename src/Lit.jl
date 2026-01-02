@@ -791,6 +791,7 @@ function create_selectbox(
         user_id::Any,
         label::String,
         options::Vector,
+        initial_value::Union{String, Vector, Nothing},
         multiple::Bool,
         placeholder::Union{String, Nothing},
         onchange::Function,
@@ -801,6 +802,7 @@ function create_selectbox(
         "type" => "selectbox",
         "user_id" => user_id,
         "default_value" => maybe_get_default_value(user_id),
+        "initial_value" => initial_value,
         "label" => label,
         "options" => options,
         "multiple" => multiple,
@@ -837,6 +839,7 @@ function create_selectbox(
         widget.id = props["id"]
         widget.fragment_id = top_fragment().id
         widget.user_id = props["user_id"]
+        widget.value = initial_value
         widget.onchange = onchange
         widgets[props["id"]] = widget
     end
@@ -850,6 +853,7 @@ end
 function selectbox(
         label::String,
         options::Vector;
+        initial_value::Union{String, Vector, Nothing}=nothing,
         id::Any=nothing,
         multiple::Bool=false,
         show_label::Bool=true,
@@ -874,7 +878,7 @@ function selectbox(
         merge!(css, container_css)
     end
 
-    return create_selectbox(widgets, parent, id, label, options, multiple, placeholder, onchange, css)
+    return create_selectbox(widgets, parent, id, label, options, initial_value, multiple, placeholder, onchange, css)
 end
 
 # Color Picker
@@ -1211,7 +1215,16 @@ end
 
 # Dataframe
 #--------------------
-function create_dataframe(widgets::Dict{String, Widget}, parent::Dict, user_id::Any, data::DataFrame, column_config::Dict, height::String, onchange::Function, args::Vector)::Any
+function create_dataframe(
+        widgets::Dict{String, Widget},
+        parent::Dict, user_id::Any,
+        data::DataFrame,
+        column_config::Dict,
+        height::String,
+        onchange::Function,
+        args::Vector
+    )::DataFrame
+
     props = Dict(
         "type" => "dataframe",
         "data_ptr" => repr(pointer_from_objref(data)),
@@ -1256,7 +1269,7 @@ function dataframe(
         id::Union{String, Nothing}=nothing,
         onchange::Function=(args...; kwargs...)->(),
         args::Vector=Vector()
-    )::Any
+    )::DataFrame
 
     task = task_local_storage("app_task")
     widgets = task.session.widgets
@@ -2161,8 +2174,8 @@ end
 
 # Interface Elements
 #--------------------
-export html, text, h1, h2, h3, h4, h5, h6, link, space, metric,
-button, image, dataframe, selectbox, radio, checkbox, checkboxes, text_input,
+export html, text, h1, h2, h3, h4, h5, h6, link, space, metric, button, image,
+dataframe, selectbox, radio, checkbox, checkboxes, text_input,
 code, color_picker, get_value, set_value, get_changes
 
 # Layout Elements
