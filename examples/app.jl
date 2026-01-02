@@ -4,7 +4,7 @@ using Lit
     add_page(["/", "/counter"])
     add_page("/avatar")
     add_page("/todo")
-    add_page("/pie-chart")
+    add_page("/forecast")
     add_page("/seattle-weather")
     add_page("/fragment-example")
 end
@@ -18,8 +18,9 @@ elseif is_on_page("/todo")
     page_script = "02-todo.jl"
 elseif is_on_page("/avatar")
     page_script = "10-avatar.jl"
-elseif is_on_page("/pie-chart")
-    page_script = "12-pie-chart.jl"
+elseif is_on_page("/forecast")
+    page_script = "13-forecast.jl"
+    layout_style = "wide"
 elseif is_on_page("/seattle-weather")
     page_script = "15-seattle-weather.jl"
     layout_style = "wide"
@@ -48,7 +49,7 @@ left_sidebar() do
         link("Counter", "/counter", style="naked", fill_width=true, css=Dict("justify-content" => "flex-start"))
         link("To-Do List", "/todo", style="naked", fill_width=true, css=Dict("justify-content" => "flex-start"))
         link("Avatar Creator", "/avatar", style="naked", fill_width=true, css=Dict("justify-content" => "flex-start"))
-        link("Pie Chart", "/pie-chart", style="naked", fill_width=true, css=Dict("justify-content" => "flex-start"))
+        link("Brazil Forecast", "/forecast", style="naked", fill_width=true, css=Dict("justify-content" => "flex-start"))
         link("Seattle Weather", "/seattle-weather", style="naked", fill_width=true, css=Dict("justify-content" => "flex-start"))
     end
 end
