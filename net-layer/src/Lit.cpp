@@ -344,10 +344,12 @@ void* LT_RunServer(void*) {
     HS_SetHTTPGetHandler(&g.hserver, "lit-app", HS_GetFileByURI);
     HS_SetVHostHostName(&g.hserver, "lit-app", g.appHostName);
     HS_SetVHostPort(&g.hserver, "lit-app", g.appPort);
+    HS_AddProtocol(&g.hserver, "lit-app", "ws", handleEvent, LT_Client);
+    HS_PushCacheControlMapping(&g.hserver, "lit-app", "*.html", "no-cache, no-store, must-revalidate");
+    HS_PushCacheControlMapping(&g.hserver, "lit-app", "/*", "max-age=2592000");
     if (!disableSSL) {
         HS_SetCertificate(&g.hserver, "lit-app", ".Lit/certs/certificate.crt", ".Lit/certs/private.key");
     }
-    HS_AddProtocol(&g.hserver, "lit-app", "ws", handleEvent, LT_Client);
 
     char tempBuffer[2*PATH_MAX];
 
@@ -359,9 +361,8 @@ void* LT_RunServer(void*) {
 
     if (g.devMode) {
         HS_SetVHostVerbosity(&g.hserver, "lit-app", 1);
+        HS_DisableFileCache(&g.hserver, "lit-app");
     }
-
-    HS_DisableFileCache(&g.hserver, "lit-app");
 
     if (g.serveDocs) {
         snprintf(tempBuffer, sizeof(tempBuffer), "%s/%s", g.litPackageRootPath, "docs");
