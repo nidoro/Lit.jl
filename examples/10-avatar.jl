@@ -111,6 +111,6 @@ img_slot.image(img_src, width=200, height=200, max_width="200px")
 
 row(align_items="center", gap=".3rem", margin="2rem 0 0 0", css=Dict("opacity" => ".7", "font-size" => ".9rem")) do
     text("Check out")
-    link("DiceBear", "http://dicebear.com", style="naked")
+    link("DiceBear", "http://dicebear.com", style="naked", new_tab=true)
 end
 
