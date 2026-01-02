@@ -95,9 +95,8 @@ if is_on_page("/")
         end
 
         space(height="1rem")
-        h6("Other resources")
 
-        row() do
+        row(css=Dict("opacity" => "0.6")) do
             link("Getting Started", "/docs/build/docs/getting-started/install", style="naked", new_tab=true)
             link("API Reference", "/docs/build/docs/category/api-reference", style="naked", new_tab=true)
             link("GitHub", "https://github.com/nidoro/Lit.jl", style="naked", new_tab=true)
