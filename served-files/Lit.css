@@ -265,7 +265,7 @@ dd-input.lt-selectbox input {
 dd-input.lt-selectbox .dd-clear-button {
     --button-bg: #999;
     --button-color: white;
-    --button-font-size: .6rem;
+    --button-font-size: 10px;
     --button-border-radius: 100%;
     --button-height: 9px;
     --button-width: 9px;
