@@ -18,7 +18,7 @@ science web app.
 
 ## ⚙️ Supported Platforms
 
-- ✅ Linux x86_64
+- ✅ Linux x86_64 &mdash; also works on WSL
 - ⏳ Windows (will come eventually)
 
 ## 🎓 Documentation
@@ -89,6 +89,8 @@ they should be able to. The same goes for back-end configuration details and
 performance. Of course, not every detail can or should be exposed to the user,
 but try our best to not get in their way when they need more control.
 
+> [!NOTE]
+> This is an informational note.
 
 
 
