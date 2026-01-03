@@ -2,8 +2,8 @@
 
 ## A new way of creating Julia web apps!
 
-`Lit.jl` is a web app framework for Julia that makes it easy for you to build
-awesome interactable pages in no time!
+Made for scientists and researchers, `Lit.jl` is a web app framework for Julia
+that makes it easy for you to build awesome interactable web pages in no time!
 
 ## Features
 
@@ -18,8 +18,8 @@ science web app.
 
 ## Supported Platforms
 
-- [x] Linux x86_64
-- [ ] Windows (will come eventually)
+✅ Linux x86_64
+⏳ Windows (will come eventually)
 
 ## Documentation
 
@@ -87,7 +87,7 @@ For that reason, we don't require our users to know HTML or CSS to make a web
 app, but if they do want to tweek something using HTML or CSS, we believe that
 they should be able to. The same goes for back-end configuration details and
 performance. Of course, not every detail can or should be exposed to the user,
-but try our best to not get in their way when if need more control.
+but try our best to not get in their way when they need more control.
 
 
 
