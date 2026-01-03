@@ -2239,6 +2239,27 @@ function main(args::Vector{String})
     end
 end
 
+# For compatibility with older julia versions that didn't have @main
+#-------------------------------------------------
+if !@isdefined(var"@main")
+    macro main(args...)
+        if !isempty(args)
+            error("USAGE: `@main` is expected to be used as `(@main)` without macro arguments.")
+        end
+        if isdefined(__module__, :main)
+            if Base.binding_module(__module__, :main) !== __module__
+                error("USAGE: Symbol `main` is already a resolved import in module $(__module__). `@main` must be used in the defining module.")
+            end
+        end
+        Core.eval(__module__, quote
+            # Force the binding to resolve to this module
+            global main
+            global var"#__main_is_entrypoint__#"::Bool = true
+        end)
+        esc(:main)
+    end
+end
+
 @main
 
 end # module

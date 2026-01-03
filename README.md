@@ -18,6 +18,8 @@ science web app.
 
 ## ⚙️ Supported Platforms
 
+> **NOTE**: Compatible with julia version 1.10 or greater
+
 - ✅ Linux x86_64 &mdash; also works on WSL
 - ⏳ Windows (will come eventually)
 
@@ -87,7 +89,7 @@ For that reason, we don't require our users to know HTML or CSS to make a web
 app, but if they do want to tweek something using HTML or CSS, we believe that
 they should be able to. The same goes for back-end configuration details and
 performance. Of course, not every detail can or should be exposed to the user,
-but try our best to not get in their way when they need more control.
+but we try our best to not get in their way when they need more control.
 
 
 
