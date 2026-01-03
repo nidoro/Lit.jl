@@ -1,11 +1,11 @@
 ---
-sidebar_position: 16
+sidebar_position: 85
 ---
 
 # Widget Value
 
 You can get and set the value of uniquely identified widgets via the
-`get_value()` and `set_value()` functions.
+[`get_value()`](#get_value) and [`set_value()`](#set_value) functions.
 
 All widget creation functions accept a user-defined `id` as an argument.
 A widget is uniquely identified if, at the moment of its creation, a user
@@ -19,7 +19,7 @@ value = get_value("my_selectbox") # value = "B"
 
 `get_value()` can be called even before the creation of a widget, in which case
 it will return either `missing` or, if the widget has a default value previously
-set with `set_default_value()`, its default value. So, as you might have
+set with [`set_default_value()`](#set_default_value), its default value. So, as you might have
 guessed, `set_default_value()` can also be called before the creation of a
 widget. Example:
 

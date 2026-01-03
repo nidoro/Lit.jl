@@ -66,7 +66,7 @@ using the functions above. Example:
 ```julia
 set_page_layout("centered", left_sidebar_initial_state="open")
 
-main_area() do
+main_area() do # Optional call to main_area()
     # main area content
 end
 
@@ -74,3 +74,7 @@ left_sidebar() do
     # left sidebar content
 end
 ```
+
+> **TIP**: In general, you don't have to explicitly call `main_area()` to place
+> elements into the main area. After calling `set_page_layout()`, any element
+> created in the top-level of your app is placed inside `main_area()`.

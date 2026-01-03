@@ -13,7 +13,8 @@ another website, or is refreshed, or internet connection is lost, etc).
 Everything that happens in between, happens within the session.
 
 You can have separate persistent data for each session. See
-[Session persistent data](/docs/api-reference/application-logic/session-persistent-data) to learn more.
+[Session persistent data](/docs/build/docs/api-reference/application-logic/session-persistent-data)
+to learn more.
 
 `Lit.jl` web apps are julia scripts that run from top to bottom. This happens
 whenever a new session is started and whenever the user interacts with an
@@ -27,23 +28,28 @@ initialization tasks should only be executed once, at the appropriate time.
 `Lit.jl` defines three macros that you can use to enclose code blocks that
 should only be executed at the initialization moment.
 
-- `@app_startup`: used to define a code block that runs only when the app is
-started and a dry-run of the app script is executed.
-- `@page_startup`: used to define a code block that runs only when a dry run of
-the current page is executed.
-- `@session_startup`: used to define a code block that runs only when the
-session is starting, i.e. the script is being executed for the first time for
-the current session.
+- [`@app_startup`](/docs/build/docs/api-reference/application-logic/app_startup-macro):
+used to define a code block that runs only when the app is started and a dry-run
+of the app script is executed.
+- [`@page_startup`](/docs/build/docs/api-reference/application-logic/page_startup-macro):
+used to define a code block that runs only when a dry run of the current page is
+executed.
+- [`@session_startup`](/docs/build/docs/api-reference/application-logic/session_startup-macro):
+used to define a code block that runs only when the session is starting, i.e.
+the script is being executed for the first time for the current session.
 
 For instance, very often you will want to associate some data to a session.
 Session persistent data can be initialized and stored in `@session_startup`
-blocks, and retrieved from anywhere using `get_session_data()`. See
-`@session_startup` to learn more.
+blocks, and retrieved from anywhere using
+[`get_session_data()`](/docs/build/docs/api-reference/application-logic/session-persistent-data).
+See [`@session_startup`](/docs/build/docs/api-reference/application-logic/session_startup-macro)
+to learn more.
 
 ## Layout
 
-The overall layout of a page can be set with `set_page_layout()`. At the
-moment, there are two predefined page layout styles that you can set:
+The overall layout of a page can be set with
+[`set_page_layout()`](/docs/build/docs/api-reference/layout-elements/set_page_layout-func).
+At the moment, there are two predefined page layout styles that you can set:
 
 - `set_page_layout("centered")`: Narrow layout with centered content.
 - `set_page_layout("wide")`: Wide layout with small padding.
@@ -61,7 +67,7 @@ first of these columns contains other two columns:
 ```julia
 set_page_layout("wide")
 
-main_area() do
+main_area() do # Optional main_area() call. See tip below.
     cols = columns(2)
 
     cols(1) do
@@ -84,9 +90,13 @@ main_area() do
 end
 ```
 
-> **NOTE:** For more control over the layout of the `main_area()`, you can
-> can call `set_page_layout("basic")`, which imposes almost no layout behaviour
-> over the `main_area()` container.
+> **TIP**: In general, you don't have to explicitly call `main_area()` to place
+> elements into the main area. After calling `set_page_layout()`, any element
+> created in the top-level of your app is placed inside `main_area()`.
+
+For more control over the layout of the `main_area()`, you can
+`set_page_layout("basic")`, which imposes almost no layout behaviour
+`main_area()` container.
 
 ## Widgets, reruns and callbacks
 
@@ -128,8 +138,9 @@ actions that will affect how the app looks and behaves.
 ## Multiple Pages
 
 `Lit.js` web apps can have multiple pages. Each page is bound to one or more
-URL paths by calling the `add_page()` function at a `@app_startup` code block.
-Example:
+URL paths by calling the [`add_page()`](/docs/build/docs/api-reference/application-logic/page-static-settings)
+function at a [`@app_startup`](/docs/build/docs/api-reference/application-logic/app_startup-macro)
+code block. Example:
 
 ```julia
 using Lit
@@ -149,7 +160,9 @@ end
 ```
 
 Each page can have its own static configuration and persistent data. See
-`Page static settings` and `Page persistent data` to learn more.
+[Page static settings](/docs/build/docs/api-reference/application-logic/page-static-settings)
+and [Page persistent data](/docs/build/docs/api-reference/application-logic/page-persistent-data)
+to learn more.
 
 
 

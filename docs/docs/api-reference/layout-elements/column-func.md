@@ -1,13 +1,13 @@
 ---
-sidebar_position: 3
+sidebar_position: 10
 ---
 
 # column
 
 Insert a container that stacks its children vertically.
 
-See also `row()`, which returns a container that stacks its children
-horizontally.
+See also [`row()`](/docs/build/docs/api-reference/layout-elements/row-func),
+which returns a container that stacks its children horizontally.
 
 ### Function Signature
 

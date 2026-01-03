@@ -1,5 +1,5 @@
 ---
-sidebar_position: 1
+sidebar_position: 5
 ---
 
 # @app_startup
@@ -14,8 +14,8 @@ end
 ```
 
 Internally, this macro is implemented by checking the result of
-`is_app_first_pass()` and running the `@app_startup` code block only if it
-returns `true`.
+[`is_app_first_pass()`](/docs/build/docs/api-reference/application-logic/is_first_pass-func)
+and running the `@app_startup` code block only if it returns `true`.
 
 ## Usage
 
@@ -39,8 +39,6 @@ code blocks. See below what you are expected to do inside `@app_startup` code bl
 end
 ```
 
-See `add_page()` for more information.
-
 ### 2. Initialization of app persistent data
 
 App persistent data is an user defined data whose lifetime is the lifetime of
@@ -50,10 +48,12 @@ shared accross sessions.
 
 You can store data that you want to be globally available through all of your
 app's pages and sessions via the `set_app_data()` function, and retrieve it
-using the `get_app_data()` function. See `App persistent data` to learn more.
+using the `get_app_data()` function.
+See [App persistent data](/docs/build/docs/api-reference/application-logic/app-persistent-data)
+to learn more.
 
 ## See also
 
-- `@page_startup`
-- `@session_startup`
+- [`@page_startup`](/docs/build/docs/api-reference/application-logic/page_startup-macro)
+- [`@session_startup`](/docs/build/docs/api-reference/application-logic/session_startup-macro)
 

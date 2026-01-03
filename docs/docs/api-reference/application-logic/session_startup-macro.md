@@ -1,5 +1,5 @@
 ---
-sidebar_position: 3
+sidebar_position: 15
 ---
 
 # @session_startup
@@ -14,8 +14,8 @@ end
 ```
 
 Internally, this macro is implemented by checking the result of
-`is_session_first_pass()` and running the `@session_startup` code block only if
-it returns `true`.
+[`is_session_first_pass()`](/docs/build/docs/api-reference/application-logic/is_first_pass-func)
+and running the `@session_startup` code block only if it returns `true`.
 
 ## Usage
 
@@ -37,10 +37,11 @@ moment using `get_page_data()`.
 
 You can store data that you want to be available within a session via the
 `set_session_data()` function, and retrieve it using the `get_session_data()`
-function. See `Session persistent data` to learn more.
+function. See [Session persistent data](/docs/build/docs/api-reference/application-logic/session-persistent-data)
+to learn more.
 
 ## See also
 
-- `@app_startup`
-- `@page_startup`
+- [`@app_startup`](/docs/build/docs/api-reference/application-logic/app_startup-macro)
+- [`@page_startup`](/docs/build/docs/api-reference/application-logic/page_startup-macro)
 

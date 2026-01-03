@@ -53,7 +53,9 @@ We use the `start_app()` function to start serving a web app from the REPL.
 By default, `start_app()` will try to run a file named `app.jl` within the
 current directory, but you can give your script a different name and call
 `start_app("my_app.jl")`. You can also change some of the server settings,
-such as its port, via `start_app()` arguments. See `start_app` to learn more.
+such as its port, via `start_app()` arguments.
+See [`start_app()`](/docs/build/docs/api-reference/application-logic/start_app-func)
+to learn more.
 
 The REPL is used just for starting the web app. Once it is started, the server
 loop will begin and the REPL will be blocked until the server is stopped with
@@ -62,12 +64,13 @@ loop will begin and the REPL will be blocked until the server is stopped with
 > **✨ NOTE:** You don't necessarily have to stop and restart the server after
 > making changes to your web app. The wep app script is reloaded (via `include`)
 > on every page refresh/interaction. One exception is if you make changes to
-> `@app_startup` or `@page_startup` code blocks, because these blocks are only
-> executed once, at the app startup.
+> [`@app_startup`](/docs/build/docs/api-reference/application-logic/app_startup-macro)
+> or [`@page_startup`](/docs/build/docs/api-reference/application-logic/page_startup-macro)
+> code blocks, because these blocks are only executed once, at the app startup.
 
 In summary, this is the basic web app development workflow:
 
-1. Start the REPL and call `start_app` (once).
+1. Start the REPL and call [`start_app()`](/docs/build/docs/api-reference/application-logic/start_app-func) (once).
 2. Open the browser (once).
 3. Make changes to the web app script.
 4. Refresh or interact with the page.
@@ -81,9 +84,10 @@ In summary, this is the basic web app development workflow:
 $ julia --project -m Lit
 ```
 
-All of the arguments accepted by `start_app()` are accepted as command line
-argument. For instance, the command line below specifies the script that should
-be run and the port that the server should listen to:
+All of the arguments accepted by [`start_app()`](/docs/build/docs/api-reference/application-logic/start_app-func)
+are accepted as command line argument. For instance, the command line below
+specifies the script that should be run and the port that the server should
+listen to:
 
 ```bash
 $ julia --project -m Lit "my_app.jl" --port 443
@@ -98,5 +102,10 @@ take more time than from restarting it from the REPL because both the julia
 runtime and your package dependencies will have to be reloaded. Nevertheless,
 this method works fine for running your app in production or running other
 people's app that you don't intend to change.
+
+## Check out our Demo Apps
+
+A great way to learn how to use `Lit.jl` is checking out our [demo apps](https://lit.coisasdodavi.net/)
+and exploring their source code.
 
 

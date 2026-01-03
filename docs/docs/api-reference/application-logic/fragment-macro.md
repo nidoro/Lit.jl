@@ -1,5 +1,5 @@
 ---
-sidebar_position: 7
+sidebar_position: 30
 ---
 
 # Fragments
@@ -40,6 +40,8 @@ body, and then calls the function `fragment()` to register the function as
 a fragment.
 
 ## Example
+
+[Live example here](https://lit.coisasdodavi.net/fragment-example).
 
 ```julia
 using Lit

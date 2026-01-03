@@ -1,5 +1,5 @@
 ---
-sidebar_position: 2
+sidebar_position: 10
 ---
 
 # @page_startup
@@ -15,8 +15,8 @@ end
 ```
 
 Internally, this macro is implemented by checking the result of
-`is_page_first_pass()` and running the `@page_startup` code block only if it
-returns `true`.
+[`is_page_first_pass()`](/docs/build/docs/api-reference/application-logic/is_first_pass-func)
+and running the `@page_startup` code block only if it returns `true`.
 
 ## Usage
 
@@ -35,7 +35,9 @@ blocks.
 Page static settings are persistent settings that are defined at the page's
 dry-run and that cannot be changed later. These include the page title,
 description, extra fonts and extra styles. The static settings related functions
-below can only be called inside `@page_startup` blocks.
+below can only be called inside `@page_startup` blocks
+(see [Page static settings](/docs/build/docs/api-reference/application-logic/page-static-settings)
+to learn more).
 
 - `set_title()`
 - `set_description()`
@@ -63,10 +65,11 @@ the data will persist. Page persistent data can be retrieved at any moment using
 
 You can store data that you want to be available to all the sessions of a page
 via the `set_page_data()` function, and retrieve it using the `get_page_data()`
-function. See `Page persistent data` to learn more.
+function. See [Page persistent data](/docs/build/docs/api-reference/application-logic/page-persistent-data)
+to learn more.
 
 ## See also
 
-- `@app_startup`
-- `@session_startup`
+- [`@app_startup`](/docs/build/docs/api-reference/application-logic/app_startup-macro)
+- [`@session_startup`](/docs/build/docs/api-reference/application-logic/session_startup-macro)
 
