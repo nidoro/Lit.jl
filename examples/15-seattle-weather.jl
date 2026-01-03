@@ -72,7 +72,7 @@ weather_icons = Dict(
 h1("Seattle Weather")
 
 space(height="2rem")
-h4("Summary of 2015")
+h4("Summary of 2015 (vs 2014)")
 
 row(gap="1.5rem 3rem", margin="0 0 2rem 0", css=Dict("flex-wrap" => "wrap")) do
     metric("Max Temperature", @sprintf("%.1fºC", max_temp_2015), @sprintf("%.1fºC", max_temp_2015 - max_temp_2014))
