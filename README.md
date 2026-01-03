@@ -5,7 +5,7 @@
 Made for scientists and researchers, `Lit.jl` is a web app framework for Julia
 that makes it easy for you to build awesome interactable web pages in no time!
 
-## Features
+## 🔥 Features
 
 - **Simple and Julian**: We appreciate the simplicity of julia. We don't want
 you to have to learn new obscure macros.
@@ -16,18 +16,18 @@ web development experience.
 - **Data-centric web apps**: We aim to support the development of any data
 science web app.
 
-## Supported Platforms
+## ⚙️ Supported Platforms
 
-✅ Linux x86_64
-⏳ Windows (will come eventually)
+- ✅ Linux x86_64
+- ⏳ Windows (will come eventually)
 
-## Documentation
+## 🎓 Documentation
 
 - [Getting Started](https://lit.coisasdodavi.net/docs/build/docs/getting-started/install)
 - [Demo Web Apps](https://lit.coisasdodavi.net/)
 - [API Reference](https://lit.coisasdodavi.net/docs/build/docs/category/api-reference)
 
-## Quick start
+## —͟͟͞͞★ Quick start
 
 ### 1. Install:
 
@@ -64,7 +64,7 @@ $ julia -m Lit
 
 The default address is http://localhost:3443
 
-## Philosophy
+## 💡 Philosophy
 
 Inspired by the popular [Streamlit](https://streamlit.io/) Python package, Lit
 is the data-centric web app framework that we wanted in julia. Since we didn't
