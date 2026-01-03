@@ -60,6 +60,7 @@ struct LT_Global {
     char appHostName[PATH_MAX];
     int appPort;
     bool serveDocs;
+    bool verbose;
     bool devMode;
 
     HS_Server hserver;
@@ -324,7 +325,7 @@ void LT_HandleSigInt(void* data) {
 }
 
 void* LT_RunServer(void*) {
-    if (!g.devMode) {
+    if (!g.verbose) {
         HS_SetLogLevel(0);
     }
 
@@ -359,8 +360,11 @@ void* LT_RunServer(void*) {
     snprintf(tempBuffer, sizeof(tempBuffer), "%s/%s", g.litPackageRootPath, "served-files");
     HS_AddServedFilesDir(&g.hserver, "lit-app", "/Lit.jl", tempBuffer);
 
-    if (g.devMode) {
+    if (g.verbose) {
         HS_SetVHostVerbosity(&g.hserver, "lit-app", 1);
+    }
+
+    if (g.devMode) {
         HS_DisableFileCache(&g.hserver, "lit-app");
     }
 
@@ -374,7 +378,7 @@ void* LT_RunServer(void*) {
         HS_SetLWSVHostConfig(&g.hserver, "lit-companion", pt_serv_buf_size, HS_KILO_BYTES(12));
         HS_SetLWSProtocolConfig(&g.hserver, "lit-companion", "HTTP", rx_buffer_size, HS_KILO_BYTES(12));
         HS_InitFileServer(&g.hserver, "lit-companion", ".Lit/companion-host.json");
-        if (g.devMode) {
+        if (g.verbose) {
             HS_SetVHostVerbosity(&g.hserver, "lit-companion", 1);
         }
     }
@@ -392,12 +396,12 @@ void* LT_RunServer(void*) {
     return 0;
 }
 
-void LT_InitNetLayer(const char* hostName, int hostNameSize, int port, bool serveDocs, const char* socketPath, int socketPathSize, const char* litPackageRootPath, int litPackageRootPathSize, bool devMode) {
+void LT_InitNetLayer(const char* hostName, int hostNameSize, int port, bool serveDocs, const char* socketPath, int socketPathSize, const char* litPackageRootPath, int litPackageRootPathSize, bool verbose, bool devMode) {
     LU_Disable(&LU_GlobalLogFile);
     LU_EnableStdout(&LU_GlobalLogFile);
     LU_DisableStderr(&LU_GlobalLogFile);
 
-    if (devMode) {
+    if (verbose) {
         LU_SetLogLevel(LU_Verbose);
     } else {
         LU_SetLogLevel(LU_Important);
@@ -406,6 +410,7 @@ void LT_InitNetLayer(const char* hostName, int hostNameSize, int port, bool serv
     strncpy(g.appHostName, hostName, hostNameSize);
     g.appPort = port;
     g.serveDocs = serveDocs;
+    g.verbose = verbose;
     g.devMode = devMode;
 
     strncpy(g.socketPath, socketPath, socketPathSize);

@@ -1,6 +1,6 @@
 name = "Lit"
 uuid = "938144cb-3a24-4977-a248-a12dea9dd101"
-version = "0.2.0-dev-b"
+version = "0.2.0-dev-c"
 authors = ["Davi Doro <ni.doro@gmail.com>"]
 
 [deps]

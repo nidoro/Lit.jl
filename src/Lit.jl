@@ -197,6 +197,7 @@ end
     first_pass::Bool = true
     base_page_config::PageConfig = PageConfig()
     pages::Vector{PageConfig} = Vector{PageConfig}()
+    verbose::Bool = false
     dev_mode::Bool = false
 end
 
@@ -1970,13 +1971,14 @@ function open_in_default_browser(url::AbstractString)::Bool
     end
 end
 
-function start_app(script_path::String="app.jl"; host_name::String="localhost", port::Int=3443, docs::Bool=false, dev_mode::Bool=false)::Nothing
+function start_app(script_path::String="app.jl"; host_name::String="localhost", port::Int=3443, docs::Bool=false, verbose::Bool=false, dev_mode::Bool=false)::Nothing
     if !isfile(script_path)
         @error "File not found: '$(script_path)'"
         return nothing
     end
 
     global g = Global()
+    g.verbose = verbose
     g.dev_mode = dev_mode
 
     if g.dev_mode
@@ -2045,10 +2047,10 @@ function start_app(script_path::String="app.jl"; host_name::String="localhost", 
 
     server = listen(socket_path)
 
-    init_net_layer(host_name, port, docs, socket_path, joinpath(@__DIR__, ".."), g.dev_mode)
+    init_net_layer(host_name, port, docs, socket_path, joinpath(@__DIR__, ".."), g.verbose, g.dev_mode)
 
     conn = accept(server)
-    @info "NetLayerStarted\nNow serving at https://$(host_name):$(port)"
+    @info "NetLayerStarted\nNow serving at http://$(host_name):$(port)"
 
     mkpath(".Lit/served-files/cache/pages")
     cp(joinpath(@__DIR__, "../served-files/LitPageTemplate.html"), ".Lit/served-files/cache/pages/first.html", force=true)
@@ -2151,12 +2153,12 @@ function destroy_net_event(ev::NetEvent)::Nothing
     ccall((:LT_DestroyNetEvent, LIT_SO), Cvoid, (NetEvent,), ev)
 end
 
-function init_net_layer(host_name::String, port::Int, docs::Bool, socket_path::String, package_root_dir::String, dev_mode::Bool)
+function init_net_layer(host_name::String, port::Int, docs::Bool, socket_path::String, package_root_dir::String, verbose::Bool, dev_mode::Bool)
     ccall(
         (:LT_InitNetLayer, LIT_SO),
         Cvoid,
-        (Cstring, Cint, Cint, Cint, Cstring, Cint, Cstring, Cint, Cint),
-        host_name, Cint(sizeof(host_name)), port, Cint(docs), socket_path, Cint(sizeof(socket_path)), package_root_dir, Cint(sizeof(package_root_dir)), Cint(dev_mode)
+        (Cstring, Cint, Cint, Cint, Cstring, Cint, Cstring, Cint, Cint, Cint),
+        host_name, Cint(sizeof(host_name)), port, Cint(docs), socket_path, Cint(sizeof(socket_path)), package_root_dir, Cint(sizeof(package_root_dir)), Cint(verbose), Cint(dev_mode)
     )
 end
 

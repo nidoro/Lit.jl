@@ -1,8 +1,8 @@
 [artifacts]
-git-tree-sha1 = "1968eac1ee9128037b2f123304d3c8261cd1f146"
+git-tree-sha1 = "f7d65cab78a3570003294da0eb53e30770ced71f"
 
     [[artifacts.download]]
-    url = "https://github.com/nidoro/Lit.jl/releases/download/v0.2.0-dev-b/artifacts-linux-x86_64.tar.gz"
-    sha256 = "743dba815af1a3b9196432515ebf651dd658600b0b913a006cc29deaea080e85"
+    url = "https://github.com/nidoro/Lit.jl/releases/download/v0.2.0-dev-c/artifacts-linux-x86_64.tar.gz"
+    sha256 = "11bdf39909cadfac5aade42e53971aa8cd17e4968f66adb994ce49f1c9f6bb98"
     os = "linux"
     arch = "x86_64"
