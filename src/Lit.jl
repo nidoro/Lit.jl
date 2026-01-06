@@ -1,5 +1,26 @@
 module Lit
 
+# Interface Elements
+#--------------------
+export html, text, h1, h2, h3, h4, h5, h6, link, space, metric, button, image,
+dataframe, selectbox, radio, checkbox, checkboxes, text_input,
+code, color_picker, get_value, set_value, get_changes
+
+# Layout Elements
+#-------------------
+export set_page_layout, main_area, left_sidebar, right_sidebar, row, column,
+columns, container, @push, @pop, push_container, pop_container
+
+# Application Logic
+#--------------------
+export start_app, @app_startup, @page_startup, @session_startup, @once,
+set_app_data, get_app_data, set_page_data, get_page_data, set_session_data,
+get_session_data, get_default_value, set_default_value,
+is_app_first_pass, is_page_first_pass, is_session_first_pass, gen_resource_path,
+fragment, @fragment, get_url_path, is_on_page, get_current_page, add_page,
+add_css_rule, add_font, begin_page_config, end_page_config, set_title,
+set_description
+
 using ArgParse
 using Libdl
 using Parameters
@@ -177,6 +198,10 @@ const InternalEventType_Task     = Cint(2)
     data::Union{NetEvent, AppTask} = Union{NetEvent, AppTask}()
 end
 
+@with_kw mutable struct RerunRequest
+    payload::Dict = Dict()
+end
+
 @with_kw mutable struct Session
     client_id::Cint = 0
     widgets::Dict{String, Widget} = Dict{String, Widget}()
@@ -184,6 +209,8 @@ end
     user_session_data::Any = nothing
     first_pass::Bool = true
     widget_defaults::Dict{String, Any} = Dict{String, Any}()
+    rerun_task::Union{Task, Nothing} = nothing
+    rerun_queue::Vector{RerunRequest} = Vector{RerunRequest}()
 end
 
 @with_kw mutable struct Global
@@ -1697,7 +1724,6 @@ function create_page_html(page::PageConfig, output_path::String)::Nothing
 end
 
 function run_user_script()::Nothing
-    #include(joinpath(@__DIR__, "LitUserSpace.jl"))
     app_mod = Module(:LitApp)
     Core.eval(app_mod, quote
         using Base
@@ -1729,10 +1755,10 @@ function remove_lines_starting_with(err::String, prefix::String)::String
     return join(keep, '\n')
 end
 
-function update(client_id::Cint, payload::Dict)
+function rerun(client_id::Cint, payload::Dict)::Task
     session = g.sessions[client_id]
 
-    return Threads.@spawn try
+    session.rerun_task = Threads.@spawn try
         # TODO: No more than one update task should be allowed to run on a
         # session at any given moment. Queue the updates if needed. And the main
         # event loop should only touch the session at the creation moment.
@@ -1810,7 +1836,9 @@ function update(client_id::Cint, payload::Dict)
                         new_value = change["new_value"]
 
                         if column_config["type"] == "Number" && !(new_value in ["", nothing])
-                            new_value = round(column_config["julia_type"], new_value)
+                            if column_config["julia_type"] <: Integer
+                                new_value = round(column_config["julia_type"], new_value)
+                            end
                         end
 
                         if (column_config["type"] == "Number" && (new_value == "" || new_value == nothing)) ||
@@ -1846,7 +1874,10 @@ function update(client_id::Cint, payload::Dict)
         g.first_pass = false
         session.first_pass = false
         get_page(get_url_path()).first_pass = false
-        put!(g.internal_events, InternalEvent(InternalEventType_Task, task))
+
+        if (payload["request_id"] != 0)
+            put!(g.internal_events, InternalEvent(InternalEventType_Task, task))
+        end
 
     catch e
         bt = catch_backtrace()
@@ -1866,6 +1897,8 @@ function update(client_id::Cint, payload::Dict)
         filter!(p -> p.second.alive, task.session.widgets)
         put!(g.internal_events, InternalEvent(InternalEventType_Task, task))
     end
+
+    return session.rerun_task
 end
 
 function is_session_first_pass()::Bool
@@ -1971,6 +2004,16 @@ function open_in_default_browser(url::AbstractString)::Bool
     end
 end
 
+function is_rerun_request_valid(session::Session, request::RerunRequest)::Bool
+    payload = request.payload
+    for front_event in payload["events"]
+        if !haskey(session.widgets, front_event["widget_id"])
+            return false
+        end
+    end
+    return true
+end
+
 function start_app(script_path::String="app.jl"; host_name::String="localhost", port::Int=3443, docs::Bool=false, verbose::Bool=false, dev_mode::Bool=false)::Nothing
     if !isfile(script_path)
         @error "File not found: '$(script_path)'"
@@ -1995,7 +2038,8 @@ function start_app(script_path::String="app.jl"; host_name::String="localhost", 
     # Dry run to try and initialize the app
     #-------------------------------------------
     dry_run_payload = Dict(
-        "type" => "update",
+        "type" => "request_rerun",
+        "request_id" => 0,
         "events" => [],
         "location" => Dict(
             "href" => "https://$(host_name):$(port)/",
@@ -2009,7 +2053,7 @@ function start_app(script_path::String="app.jl"; host_name::String="localhost", 
     add_page("/", title="Lit App", description="Lit App")
 
     @info "Dry Run: First pass over '$(script_path)'.\n$(AC_Green("@app_startup")) code blocks will run now."
-    wait(update(Cint(0), dry_run_payload))
+    wait(rerun(Cint(0), dry_run_payload))
 
     if is_app_first_pass()
         @error "Dry run of app '$(script_path)' failed."
@@ -2027,7 +2071,7 @@ function start_app(script_path::String="app.jl"; host_name::String="localhost", 
         dry_run_payload["location"]["href"] = "https://$(host_name):$(port)" * page.uris[1]
         dry_run_payload["location"]["pathname"] = page.uris[1]
 
-        wait(update(Cint(0), dry_run_payload))
+        wait(rerun(Cint(0), dry_run_payload))
 
         if page.first_pass
             @error "Dry run of page '$(page.uris[1])' failed."
@@ -2107,15 +2151,21 @@ function start_app(script_path::String="app.jl"; host_name::String="localhost", 
                 destroy_net_event(ev.data)
 
                 payload = Dict(JSON.parse(payload_string))
-                #println("PAYLOAD:")
-                #println(payload)
+                #@show payload
 
-                if payload["type"] == "update"
-                    update(ev.data.client_id, payload)
+                session = g.sessions[ev.data.client_id]
+
+                if payload["type"] == "request_rerun"
+                    if session.rerun_task === nothing
+                        rerun(ev.data.client_id, payload)
+                    else
+                        @debug "Rerun already happening. Queueing rerun request. Current queue size: $(length(session.rerun_queue))"
+                        push!(session.rerun_queue, RerunRequest(payload))
+                    end
                 else
                     @error "Unknown payload type '$(payload["type"])'"
                 end
-            elseif ev.data.ev_type == NetEventType_NewPayload
+            elseif ev.data.ev_type == NetEventType_ServerLoopInterrupted
                 @info "NetEventType_ServerLoopInterrupted"
                 close(conn)
             end
@@ -2124,9 +2174,11 @@ function start_app(script_path::String="app.jl"; host_name::String="localhost", 
             session = g.sessions[ev.data.client_id]
 
             payload = Dict(
-                "type" => "new_state",
+                "type" => "response_rerun",
                 "dev_mode" => g.dev_mode,
+                "request_id" => ev.data.payload["request_id"],
                 "root" => ev.data.state["root"],
+                "error" => nothing
             )
 
             payload_string = JSON.json(payload)
@@ -2134,6 +2186,32 @@ function start_app(script_path::String="app.jl"; host_name::String="localhost", 
             push_app_event(app_event)
 
             write(conn, " ")
+
+            session.rerun_task = nothing
+
+            # Start next rerun request on queue, if any
+            #-------------------------------------------
+            if length(session.rerun_queue) > 0
+                rerun_request = popfirst!(session.rerun_queue)
+                if is_rerun_request_valid(session, rerun_request)
+                    @debug "Running next rerun request in queue"
+                    rerun(session.client_id, rerun_request.payload)
+                else
+                    @debug "Next rerun request in queue is invalid"
+                    payload = Dict(
+                        "type" => "response_rerun",
+                        "dev_mode" => g.dev_mode,
+                        "request_id" => ev.data.payload["request_id"],
+                        "error" => Dict(
+                            "type" => "InvalidState",
+                        )
+                    )
+                    payload_string = JSON.json(payload)
+                    app_event = create_app_event(AppEventType_NewPayload, session.client_id, payload_string)
+                    push_app_event(app_event)
+                    write(conn, " ")
+                end
+            end
         end
     end
 
@@ -2171,27 +2249,6 @@ end
 function stop_server()
     return ccall((:LT_StopServer, LIT_SO), Cvoid, ())
 end
-
-# Interface Elements
-#--------------------
-export html, text, h1, h2, h3, h4, h5, h6, link, space, metric, button, image,
-dataframe, selectbox, radio, checkbox, checkboxes, text_input,
-code, color_picker, get_value, set_value, get_changes
-
-# Layout Elements
-#-------------------
-export set_page_layout, main_area, left_sidebar, right_sidebar, row, column,
-columns, container, @push, @pop, push_container, pop_container
-
-# Application Logic
-#--------------------
-export start_app, @app_startup, @page_startup, @session_startup, @once,
-set_app_data, get_app_data, set_page_data, get_page_data, set_session_data,
-get_session_data, get_default_value, set_default_value,
-is_app_first_pass, is_page_first_pass, is_session_first_pass, gen_resource_path,
-fragment, @fragment, get_url_path, is_on_page, get_current_page, add_page,
-add_css_rule, add_font, begin_page_config, end_page_config, set_title,
-set_description
 
 #---------------------------------
 
@@ -2245,11 +2302,6 @@ if !@isdefined(var"@main")
     macro main(args...)
         if !isempty(args)
             error("USAGE: `@main` is expected to be used as `(@main)` without macro arguments.")
-        end
-        if isdefined(__module__, :main)
-            if Base.binding_module(__module__, :main) !== __module__
-                error("USAGE: Symbol `main` is already a resolved import in module $(__module__). `@main` must be used in the defining module.")
-            end
         end
         Core.eval(__module__, quote
             # Force the binding to resolve to this module

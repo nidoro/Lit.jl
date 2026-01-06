@@ -1,6 +1,8 @@
 #!/bin/bash
 
-# Run from repo's root
+# NOTE: Run from repo's root
+
+net-layer/build.sh
 
 ARTIFACTS_DIR=local/build/artifacts-linux-x86_64
 

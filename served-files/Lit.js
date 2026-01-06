@@ -16,6 +16,8 @@ class LT_Icon extends HTMLElement {
 var g = {
     ws: null,
     devMode: false,
+    nextRequestId: 1,
+    lastValidRerunResponse: null,
 };
 
 function getLocation() {
@@ -29,16 +31,19 @@ function getLocation() {
 }
 
 function requestUpdate(events) {
-    const fragmentId = events[0].fragment_id;
-    const fragChildren = document.querySelectorAll(`.lt_fragment_container[data-lt-fragment-id="${fragmentId}"] > *`);
-    for (const child of fragChildren) {
-        child.style.setProperty("--opacity", 0.5);
-        child.style.setProperty("--transition-duration", "0.8s");
+    if (events.length) {
+        const fragmentId = events[0].fragment_id;
+        const fragChildren = document.querySelectorAll(`.lt_fragment_container[data-lt-fragment-id="${fragmentId}"] > *`);
+        for (const child of fragChildren) {
+            child.style.setProperty("--opacity", 0.5);
+            child.style.setProperty("--transition-duration", "0.8s");
+        }
     }
 
     wsSendObj({
-        type: "update",
+        type: "request_rerun",
         location: getLocation(),
+        request_id: g.nextRequestId++,
         events,
     });
 }
@@ -710,7 +715,7 @@ function wsOnOpen() {
     if (g.devMode) {
         console.log("Connected to net-layer");
     }
-    wsSendObj({type: "update", location: getLocation(), events: []});
+    requestUpdate([]);
 }
 
 function getImages(props) {
@@ -738,6 +743,46 @@ async function preloadImages(root) {
     return Promise.all(tasks);
 }
 
+async function displayRerunResponse(msg) {
+    // Preload images
+    //-------------------
+    await preloadImages(msg.root);
+
+    const fragmentId = msg.root["fragment_id"];
+
+    const oldFragContainer = document.querySelector(`.lt_fragment_container[data-lt-fragment-id="${fragmentId}"]`);
+    const computedStyle = getComputedStyle(oldFragContainer.firstElementChild);
+    oldFragContainer.style.visibility = "hidden";
+
+    const newFragWrapper = document.createDocumentFragment();
+
+    const newFragContainer = createAppElement(newFragWrapper, msg.root, "");
+    for (const child of newFragContainer.children) {
+        child.style.setProperty("--opacity", computedStyle.opacity);
+        child.style.setProperty("--transition-duration", "0.15s");
+    }
+
+    oldFragContainer.parentElement.insertBefore(newFragWrapper, oldFragContainer);
+    oldFragContainer.remove();
+
+    // Remove checkbox groups that ceased to exist
+    //
+    // TODO: I think this should actually be something done on the
+    // disconnected event of the DD_Checkbox/DD_Radio component, when
+    // the last checkbox of a group is removed.
+    //-----------------------------------------------
+    while (DD_Components.removeItemFromArrayIfCondition(DD_Checkbox.groups, (entry) => (entry.checkboxes.length == 0)));
+
+    // Initialize opacity transition
+    setTimeout(() => {
+        for (const child of newFragContainer.children) {
+            child.style.setProperty("--opacity", 1);
+        }
+    }, 10);
+
+    g.lastValidRerunResponse = null;
+}
+
 async function wsOnMessage(event) {
     //console.log("Receiving this (raw):");
     //console.log(event.data);
@@ -750,38 +795,19 @@ async function wsOnMessage(event) {
         console.log(msg);
     }
 
-    if (msg.type == "new_state") {
-        // Preload images
-        //-------------------
-        await preloadImages(msg.root);
-
-        const fragmentId = msg.root["fragment_id"];
-
-        const oldFragContainer = document.querySelector(`.lt_fragment_container[data-lt-fragment-id="${fragmentId}"]`);
-        const computedStyle = getComputedStyle(oldFragContainer.firstElementChild);
-        oldFragContainer.style.visibility = "hidden";
-
-        const newFragWrapper = document.createDocumentFragment();
-
-        const newFragContainer = createAppElement(newFragWrapper, msg.root, "");
-        for (const child of newFragContainer.children) {
-            child.style.setProperty("--opacity", computedStyle.opacity);
-            child.style.setProperty("--transition-duration", "0.15s");
-        }
-
-        oldFragContainer.parentElement.insertBefore(newFragWrapper, oldFragContainer);
-        oldFragContainer.remove();
-
-        // Remove checkbox groups that ceased to exist
-        //-----------------------------------------------
-        while (DD_Components.removeItemFromArrayIfCondition(DD_Checkbox.groups, (entry) => (entry.checkboxes.length == 0)));
-
-        // Initialize opacity transition
-        setTimeout(() => {
-            for (const child of newFragContainer.children) {
-                child.style.setProperty("--opacity", 1);
+    if (msg.type == "response_rerun") {
+        if (msg.error == null) {
+            // We only display the returned state if it is the response we are
+            // *finally* waiting for. Otherwise, store this as the last valid
+            // rerun response and wait for the next response.
+            if (msg.request_id == g.nextRequestId-1) {
+                displayRerunResponse(msg);
+            } else {
+                g.lastValidRerunResponse = msg;
             }
-        }, 10);
+        } else if (msg.error.type == "InvalidState") {
+            displayRerunResponse(g.lastValidRerunResponse);
+        }
     }
 }
 

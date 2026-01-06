@@ -1,6 +1,7 @@
 local
 Manifest.toml
 .kate*
+examples/Manifest.toml
 examples/.Lit/companion-host.json
 examples/.Lit/certs
 examples/.Lit/served-files/cache
