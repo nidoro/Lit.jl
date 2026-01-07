@@ -91,6 +91,25 @@ they should be able to. The same goes for back-end configuration details and
 performance. Of course, not every detail can or should be exposed to the user,
 but we try our best to not get in their way when they need more control.
 
+## Pre-1.0 Status
+
+As long as we are in version `0.x`, there are a few things that you should know:
+
+- **API Sability**: The API is not stable. It can change, hopefully not often,
+but we can't promise that. So we are not adhering to
+[Semantic Versioning](https://semver.org/) just yet, although we will on `1.0`.
+Public API breaking changes can be found at `CHANGELOG.txt`.
+- **Collaboration**: You can collaborate for with Lit's development by using it,
+testing it and giving your feedback on
+[issues](https://github.com/nidoro/Lit.jl/issues). But at this point in time,
+when the design of the package is still taking shape and form, we think it is
+best that its development stays centralized on us.
+- **Security and Resilience**: While we believe that Lit has no major
+vulnerability since when we made it public, tests are still being performed to
+ensure that. Meanwhile, our advice is that you don't host your Lit web app a
+along with sensitive data (or run it inside a sandbox like
+[NSJail](https://github.com/google/nsjail)) and don't use it for anything
+safety-critical.
 
 
 
