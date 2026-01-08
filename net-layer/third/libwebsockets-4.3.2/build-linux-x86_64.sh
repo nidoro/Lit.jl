@@ -2,7 +2,7 @@
 
 THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-DEST_DIR=$THIS_DIR/../../../local/build/libwebsockets-4.3.2
+DEST_DIR=$THIS_DIR/../../../build/linux-x86_64/libwebsockets-4.3.2
 mkdir -p $DEST_DIR
 
 cd $DEST_DIR
