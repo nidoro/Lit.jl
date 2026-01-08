@@ -80,8 +80,8 @@ get an web app up and running in no time.
 But our past experience developing web apps has taught us something about web
 app frameworks. In the begining of the development you want the framework to
 be very opinionated, so you don't have to worry about details when you just want
-to have something reasonably nice-looking and that performs well enough. But
-later in the development, when the app is more mature, you *do* want as much
+to have something reasonably nice-looking and that performs just well enough.
+But later in the development, when the app is more mature, you *do* want as much
 control as possible, both over the look of the app in the front-end and over
 technical details in the back-end.
 
@@ -95,10 +95,11 @@ but we try our best to not get in their way when they need more control.
 
 As long as we are in version `0.x`, there are a few things that you should know:
 
-- **API Sability**: The API is not stable. It can change, hopefully not often,
+- **API Stability**: The API is not stable. It can change. Hopefully not often,
 but we can't promise that. So we are not adhering to
-[Semantic Versioning](https://semver.org/) just yet, although we will on `1.0`.
-Public API breaking changes can be found at `CHANGELOG.txt`.
+[Semantic Versioning](https://semver.org/) just yet, although we intend to on
+version `1.0` forward. Public API breaking changes can be found in
+`CHANGELOG.txt`.
 - **Collaboration**: You can collaborate for with Lit's development by using it,
 testing it and giving your feedback on
 [issues](https://github.com/nidoro/Lit.jl/issues). But at this point in time,

@@ -1,6 +1,9 @@
 local
+build
+.dockerignore
 Manifest.toml
 .kate*
+
 examples/Manifest.toml
 examples/.Lit/companion-host.json
 examples/.Lit/certs
@@ -14,10 +17,10 @@ net-layer/third/openssl-OpenSSL_1_1_1t/**/*.o
 net-layer/third/openssl-OpenSSL_1_1_1t/install/
 net-layer/third/openssl-OpenSSL_1_1_1t/test/
 
-icu-release-78.1/*.so*
-icu-release-78.1/*.a
-icu-release-78.1/*.o
-icu-release-78.1/**/*.o
-icu-release-78.1/install/
-icu-release-78.1/test/
-icu-release-78.1/.github
+net-layer/third/icu-release-78.1/*.so*
+net-layer/third/icu-release-78.1/*.a
+net-layer/third/icu-release-78.1/*.o
+net-layer/third/icu-release-78.1/**/*.o
+net-layer/third/icu-release-78.1/install/
+net-layer/third/icu-release-78.1/test/
+net-layer/third/icu-release-78.1/.github
