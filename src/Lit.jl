@@ -247,7 +247,9 @@ end
 function get_dyn_lib_path()::String
     if g.dev_mode
         if Sys.islinux()
-            return joinpath(@__DIR__, "../local/build/artifacts-linux-x86_64/liblit.so")
+            return joinpath(@__DIR__, "../build/linux-x86_64/artifacts-linux-x86_64/liblit.so")
+        elseif Sys.iswindows()
+            return joinpath(@__DIR__, "../build/win64/artifacts-win64/liblit.dll")
         else
             @error "Unsupported OS"
         end
@@ -2081,17 +2083,12 @@ function start_app(script_path::String="app.jl"; host_name::String="localhost", 
 
     # Setup net layer connection
     #--------------------------------
-    socket_path = "/tmp/Lit-$(get_random_string(6)).sock"
+    ipc_server = listen(IPv4(127,0,0,1), 0)
+    ipc_port = getsockname(ipc_server)[2]
 
-    if ispath(socket_path)
-        rm(socket_path)
-    end
+    init_net_layer(host_name, port, docs, Int(ipc_port), joinpath(@__DIR__, ".."), g.verbose, g.dev_mode)
 
-    server = listen(socket_path)
-
-    init_net_layer(host_name, port, docs, socket_path, joinpath(@__DIR__, ".."), g.verbose, g.dev_mode)
-
-    conn = accept(server)
+    ipc_connection = accept(ipc_server)
     @info "NetLayerStarted\nNow serving at http://$(host_name):$(port)"
 
     mkpath(".Lit/served-files/cache/pages")
@@ -2122,8 +2119,9 @@ function start_app(script_path::String="app.jl"; host_name::String="localhost", 
     Threads.@spawn begin
         stop_loop = false
 
-        while isopen(conn) && !stop_loop
-            readavailable(conn)
+        while isopen(ipc_connection) && !stop_loop
+            #readavailable(ipc_connection)
+            read(ipc_connection, UInt8)
 
             ev = pop_net_event()
             while ev.ev_type != NetEventType_None
@@ -2137,7 +2135,7 @@ function start_app(script_path::String="app.jl"; host_name::String="localhost", 
         end
     end
 
-    while isopen(conn)
+    while isopen(ipc_connection)
         ev = take!(g.internal_events)
         if ev.ev_type == InternalEventType_Network
             if ev.data.ev_type == NetEventType_NewClient
@@ -2167,7 +2165,7 @@ function start_app(script_path::String="app.jl"; host_name::String="localhost", 
                 end
             elseif ev.data.ev_type == NetEventType_ServerLoopInterrupted
                 @info "NetEventType_ServerLoopInterrupted"
-                close(conn)
+                close(ipc_connection)
             end
         elseif ev.ev_type == InternalEventType_Task && ev.data.client_id != Cint(0)
             @debug "TaskFinished $(ev.data.client_id)"
@@ -2185,7 +2183,7 @@ function start_app(script_path::String="app.jl"; host_name::String="localhost", 
             app_event = create_app_event(AppEventType_NewPayload, session.client_id, payload_string)
             push_app_event(app_event)
 
-            write(conn, " ")
+            write(ipc_connection, " ")
 
             session.rerun_task = nothing
 
@@ -2209,7 +2207,7 @@ function start_app(script_path::String="app.jl"; host_name::String="localhost", 
                     payload_string = JSON.json(payload)
                     app_event = create_app_event(AppEventType_NewPayload, session.client_id, payload_string)
                     push_app_event(app_event)
-                    write(conn, " ")
+                    write(ipc_connection, " ")
                 end
             end
         end
@@ -2229,12 +2227,12 @@ function destroy_net_event(ev::NetEvent)::Nothing
     ccall((:LT_DestroyNetEvent, LIT_SO), Cvoid, (NetEvent,), ev)
 end
 
-function init_net_layer(host_name::String, port::Int, docs::Bool, socket_path::String, package_root_dir::String, verbose::Bool, dev_mode::Bool)
+function init_net_layer(host_name::String, port::Int, docs::Bool, ipc_port::Int, package_root_dir::String, verbose::Bool, dev_mode::Bool)
     ccall(
         (:LT_InitNetLayer, LIT_SO),
         Cvoid,
-        (Cstring, Cint, Cint, Cint, Cstring, Cint, Cstring, Cint, Cint, Cint),
-        host_name, Cint(sizeof(host_name)), port, Cint(docs), socket_path, Cint(sizeof(socket_path)), package_root_dir, Cint(sizeof(package_root_dir)), Cint(verbose), Cint(dev_mode)
+        (Cstring, Cint, Cint, Cint, Cint, Cstring, Cint, Cint, Cint),
+        host_name, Cint(sizeof(host_name)), port, Cint(docs), Cint(ipc_port), package_root_dir, Cint(sizeof(package_root_dir)), Cint(verbose), Cint(dev_mode)
     )
 end
 
@@ -2254,9 +2252,9 @@ end
 
 function __init__()
     # Check if the host system is supported.
-    if !(Sys.islinux() && Sys.ARCH === :x86_64)
+    if !((Sys.islinux() && Sys.ARCH === :x86_64) || (Sys.iswindows() && Sys.ARCH === :x86_64))
         printstyled("Error: ", color=:red, bold=true)
-        println("Currently, Lit.jl is only supported on Linux x86_64.")
+        println("Currently, Lit.jl is only supported on Windows and Linux x86_64.")
         println("       Your platform: $(Sys.KERNEL) $(Sys.ARCH).")
     end
 end
