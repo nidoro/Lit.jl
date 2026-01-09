@@ -1,12 +1,30 @@
-//#include <sys/un.h>
-
+#include <pthread.h>
 #include "DD_Assert.h"
 #include "DD_HTTPS.h"
 #include "DD_LogUtils.h"
 #include "DD_SignalUtils.h"
 
-#if 0
+#ifdef _WIN32
+    #include <winsock2.h>
+    #include <ws2tcpip.h>
+    typedef SOCKET socket_t;
+#else
+    #include <sys/socket.h>
+    #include <netinet/in.h>
+    #include <arpa/inet.h>
+    #include <sys/un.h>
+    #include <unistd.h>
+    #include <netinet/tcp.h>
+    typedef int socket_t;
+#endif
+
 #define MIN(a, b) (a < b ? a : b)
+
+#ifdef _WIN32
+#define LT_API __declspec(dllexport)
+#else
+#define LT_API
+#endif
 
 extern "C" {
 
@@ -53,7 +71,7 @@ struct LT_AppEvent {
 
 struct LT_Global {
     pthread_t threadId;
-    char socketPath[PATH_MAX];
+    int ipcPort;
     char litPackageRootPath[PATH_MAX];
     int fdSocket;
 
@@ -83,7 +101,11 @@ struct LT_Global {
 
 LT_Global g;
 
-LT_Client* LT_GetClient(int id) {
+LT_API void LT_WakeUpAppLayer() {
+    write(g.fdSocket, "", 1);
+}
+
+LT_API LT_Client* LT_GetClient(int id) {
     for (int i = 0; i < arrcount(g.clients); ++i) {
         if (g.clients[i]->id == id)
             return g.clients[i];
@@ -93,7 +115,7 @@ LT_Client* LT_GetClient(int id) {
 
 // NOTE: Net events are created and pushed by the network layer and poped and
 // destroyed by the app layer.
-LT_NetEvent LT_CreateNetEvent(LT_NetEventType type, int clientId, char* payload, int payloadSize) {
+LT_API LT_NetEvent LT_CreateNetEvent(LT_NetEventType type, int clientId, char* payload, int payloadSize) {
     LT_NetEvent ev = {
         .type=type,
         .clientId=clientId,
@@ -108,19 +130,19 @@ LT_NetEvent LT_CreateNetEvent(LT_NetEventType type, int clientId, char* payload,
     return ev;
 }
 
-void LT_DestroyNetEvent(LT_NetEvent ev) {
+LT_API void LT_DestroyNetEvent(LT_NetEvent ev) {
     if (ev.payload) {
         arrfree(ev.payload);
     }
 }
 
-void LT_PushNetEvent(LT_NetEvent ev) {
+LT_API void LT_PushNetEvent(LT_NetEvent ev) {
     pthread_mutex_lock(&g.netEventsMutex);
     arradd(g.netEvents, ev);
     pthread_mutex_unlock(&g.netEventsMutex);
 }
 
-LT_NetEvent LT_PopNetEvent() {
+LT_API LT_NetEvent LT_PopNetEvent() {
     pthread_mutex_lock(&g.netEventsMutex);
 
     LT_NetEvent ev = {};
@@ -136,7 +158,7 @@ LT_NetEvent LT_PopNetEvent() {
 
 // NOTE: App events are created and pushed by the app layer and poped and
 // destroyed by the net layer.
-LT_AppEvent LT_CreateAppEvent(LT_AppEventType type, int clientId, char* payload, int payloadSize) {
+LT_API LT_AppEvent LT_CreateAppEvent(LT_AppEventType type, int clientId, char* payload, int payloadSize) {
     LT_AppEvent ev = {
         .type=type,
         .clientId=clientId,
@@ -162,18 +184,18 @@ LT_AppEvent LT_CreateAppEvent(LT_AppEventType type, int clientId, char* payload,
     return ev;
 }
 
-void LT_DestroyAppEvent(LT_AppEvent ev) {
+LT_API void LT_DestroyAppEvent(LT_AppEvent ev) {
     // NOTE: The payload memory is free'd by DD_HTTPS, after sending the payload.
     // So I guess we don't have to do anything here...
 }
 
-void LT_PushAppEvent(LT_AppEvent ev) {
+LT_API void LT_PushAppEvent(LT_AppEvent ev) {
     pthread_mutex_lock(&g.appEventsMutex);
     arradd(g.appEvents, ev);
     pthread_mutex_unlock(&g.appEventsMutex);
 }
 
-LT_AppEvent LT_PopAppEvent() {
+LT_API LT_AppEvent LT_PopAppEvent() {
     pthread_mutex_lock(&g.appEventsMutex);
 
     LT_AppEvent ev = {};
@@ -187,21 +209,21 @@ LT_AppEvent LT_PopAppEvent() {
     return ev;
 }
 
-void LT_LockClient(int clientId) {
+LT_API void LT_LockClient(int clientId) {
     LT_Client* wcClient = LT_GetClient(clientId);
     if (wcClient) {
         pthread_mutex_lock(wcClient->mutex);
     }
 }
 
-void LT_UnlockClient(int clientId) {
+LT_API void LT_UnlockClient(int clientId) {
     LT_Client* wcClient = LT_GetClient(clientId);
     if (wcClient) {
         pthread_mutex_unlock(wcClient->mutex);
     }
 }
 
-int LT_ProcessIncomingMessage(HS_CallbackArgs* args) {
+LT_API int LT_ProcessIncomingMessage(HS_CallbackArgs* args) {
     LT_Client* wcClient = HS_GetClientData(LT_Client, args);
 
     LU_Log(LU_Debug, "IncomingMessage | Bytes: %d | Payload: %.*s", wcClient->readSize, wcClient->readSize, wcClient->readBuffer);
@@ -215,12 +237,12 @@ int LT_ProcessIncomingMessage(HS_CallbackArgs* args) {
 
     LT_PushNetEvent(ev);
 
-    write(g.fdSocket, "", 1);
+    LT_WakeUpAppLayer();
 
     return 0;
 }
 
-int HS_CALLBACK(handleEvent, args) {
+LT_API int HS_CALLBACK(handleEvent, args) {
     HS_VHost* vhost = HS_GetVHost(args->socket);
     LT_Client* wcClient = HS_GetClientData(LT_Client, args);
 
@@ -247,11 +269,15 @@ int HS_CALLBACK(handleEvent, args) {
                 .clientId = wcClient->id,
             });
 
-            write(g.fdSocket, "", 1);
+            LT_WakeUpAppLayer();
         } break;
 
         case LWS_CALLBACK_PROTOCOL_INIT: {
+#ifdef _WIN32
+            lws_sock_file_fd_type fd = {(long long unsigned int) g.fdSocket};
+#else
             lws_sock_file_fd_type fd = {g.fdSocket};
+#endif
             lws* wsi = lws_adopt_descriptor_vhost(vhost->lwsVHost, LWS_ADOPT_RAW_FILE_DESC, fd, "ws", 0);
         } break;
 
@@ -297,7 +323,7 @@ int HS_CALLBACK(handleEvent, args) {
     return 0;
 }
 
-void LT_PushURIMapping(const char* uri, int uriSize, const char* filePath, int filePathSize) {
+LT_API void LT_PushURIMapping(const char* uri, int uriSize, const char* filePath, int filePathSize) {
     char uriBuf[PATH_MAX] = {};
     char filePathBuf[PATH_MAX] = {};
     strncpy(uriBuf, uri, uriSize);
@@ -305,27 +331,64 @@ void LT_PushURIMapping(const char* uri, int uriSize, const char* filePath, int f
     HS_PushURIMapping(&g.hserver, "lit-app", uriBuf, filePathBuf);
 }
 
-void LT_ClearURIMapping() {
+LT_API void LT_ClearURIMapping() {
     HS_ClearURIMapping(&g.hserver, "lit-app");
 }
 
-void LT_SetStateSize(size_t size) {
+LT_API void LT_SetStateSize(size_t size) {
     g.appStateSize = size;
 }
 
-void LT_HandleSigInt(void* data) {
+LT_API void LT_HandleSigInt(void* data) {
     HS_Stop(&g.hserver);
 
     LT_NetEvent ev = LT_CreateNetEvent(LT_NetEventType_ServerLoopInterrupted, 0, 0, 0);
     LT_PushNetEvent(ev);
-    write(g.fdSocket, "", 1);
+    LT_WakeUpAppLayer();
     close(g.fdSocket);
 
     printf("\r  \n");
     LU_Log(LU_Debug, "ServerLoopInterrupted");
 }
 
-void* LT_RunServer(void*) {
+// void LT_StartIPC() {
+//     g.fdSocket = socket(AF_INET, SOCK_STREAM, 0);
+//     sockaddr_in socketAddr = {};
+//     socketAddr.sin_family = AF_INET;
+//     socketAddr.sin_port = htons(g.ipcPort);
+//     inet_pton(AF_INET, "127.0.0.1", &socketAddr.sin_addr);
+//     connect(g.fdSocket, (sockaddr*)&socketAddr, sizeof(socketAddr));
+// }
+
+LT_API void LT_StartIPC(void) {
+#ifdef _WIN32
+    static int wsa_initialized = 0;
+    if (!wsa_initialized) {
+        WSADATA wsa;
+        if (WSAStartup(MAKEWORD(2,2), &wsa) != 0)
+            return;
+        wsa_initialized = 1;
+    }
+#endif
+
+    g.fdSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+#ifdef _WIN32
+    if (g.fdSocket == INVALID_SOCKET)
+        return;
+#else
+    if (g.fdSocket < 0)
+        return;
+#endif
+
+    struct sockaddr_in socketAddr = {0};
+    socketAddr.sin_family = AF_INET;
+    socketAddr.sin_port = htons((uint16_t)g.ipcPort);
+    inet_pton(AF_INET, "127.0.0.1", &socketAddr.sin_addr);
+
+    connect(g.fdSocket, (struct sockaddr *)&socketAddr, sizeof(socketAddr));
+}
+
+LT_API void* LT_RunServer(void*) {
     if (!g.verbose) {
         HS_SetLogLevel(0);
     }
@@ -386,18 +449,14 @@ void* LT_RunServer(void*) {
 
     SG_RegisterHandler(SIGINT, LT_HandleSigInt, 0);
 
-    g.fdSocket = socket(AF_UNIX, SOCK_STREAM, 0);
-    sockaddr_un socketAddr = {};
-    socketAddr.sun_family = AF_UNIX;
-    strncpy(socketAddr.sun_path, g.socketPath, sizeof(socketAddr.sun_path) - 1);
-    connect(g.fdSocket, (sockaddr*)&socketAddr, sizeof(socketAddr));
+    LT_StartIPC();
 
     HS_RunForever(&g.hserver, true);
     HS_Destroy(&g.hserver);
     return 0;
 }
 
-void LT_InitNetLayer(const char* hostName, int hostNameSize, int port, bool serveDocs, const char* socketPath, int socketPathSize, const char* litPackageRootPath, int litPackageRootPathSize, bool verbose, bool devMode) {
+LT_API void LT_InitNetLayer(const char* hostName, int hostNameSize, int port, bool serveDocs, int ipcPort, const char* litPackageRootPath, int litPackageRootPathSize, bool verbose, bool devMode) {
     LU_Disable(&LU_GlobalLogFile);
     LU_EnableStdout(&LU_GlobalLogFile);
     LU_DisableStderr(&LU_GlobalLogFile);
@@ -413,8 +472,8 @@ void LT_InitNetLayer(const char* hostName, int hostNameSize, int port, bool serv
     g.serveDocs = serveDocs;
     g.verbose = verbose;
     g.devMode = devMode;
+    g.ipcPort = ipcPort;
 
-    strncpy(g.socketPath, socketPath, socketPathSize);
     strncpy(g.litPackageRootPath, litPackageRootPath, litPackageRootPathSize);
     getcwd(g.projectPath, sizeof(g.projectPath));
 
@@ -424,19 +483,18 @@ void LT_InitNetLayer(const char* hostName, int hostNameSize, int port, bool serv
     int result = pthread_create(&g.threadId, 0, LT_RunServer, 0);
 }
 
-bool LT_ServerIsRunning() {
+LT_API bool LT_ServerIsRunning() {
     return g.hserver.isRunning;
 }
 
-int LT_DoServiceWork() {
+LT_API int LT_DoServiceWork() {
     return lws_service(g.hserver.lwsContext, 0);
 }
 
-void LT_StopServer() {
+LT_API void LT_StopServer() {
     lws_cancel_service(g.hserver.lwsContext);
     g.hserver.isRunning = false;
 }
 
 } // extern "C"
 
-#endif

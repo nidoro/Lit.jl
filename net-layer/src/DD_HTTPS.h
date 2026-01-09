@@ -1786,6 +1786,7 @@ int HS_GetFileByURI(HS_CallbackArgs* args) {
 
         if (server->disableFileCache || (server->memCacheMaxSizeMB > 0 && (int)client->fileSize > HS_MEGA_BYTES(server->memCacheMaxSizeMB))) {
             // Don't cache
+            // TODO: Make this work on windows
             HS_SystemCall("rm -rf %s/.cache-bust", rootDir);
             HS_SystemCall("rm -rf %s/.ssi-parsed", rootDir);
         } else if (!fileEntry) {
