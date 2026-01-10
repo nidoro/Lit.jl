@@ -255,9 +255,9 @@ function get_dyn_lib_path()::String
         end
     else
         if Sys.islinux()
-            return joinpath(artifact"artifacts", "liblit.so")
+            return joinpath(artifact"linux-x86_64", "liblit.so")
         elseif Sys.iswindows()
-            return joinpath(artifact"artifacts", "liblit.dll")
+            return joinpath(artifact"win64", "liblit.dll")
         else
             @error "Unsupported OS: $(Sys.KERNEL) $(Sys.ARCH)"
         end
