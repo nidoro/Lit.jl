@@ -2135,82 +2135,87 @@ function start_app(script_path::String="app.jl"; host_name::String="localhost", 
         end
     end
 
-    while isopen(ipc_connection)
-        ev = take!(g.internal_events)
-        if ev.ev_type == InternalEventType_Network
-            if ev.data.ev_type == NetEventType_NewClient
-                @debug "NetEventType_NewClient | $(ev.data.client_id)"
-                new_client(ev.data.client_id)
-            elseif ev.data.ev_type == NetEventType_NewPayload
-                @debug "NetEventType_NewPayload | $(ev.data.client_id)"
-                payload_string = unsafe_string(ev.data.payload, ev.data.payload_size)
+    try
+        while isopen(ipc_connection)
+            ev = take!(g.internal_events)
 
-                # NOTE: Now that we've copied the payload, it is safe to destroy the event.
-                destroy_net_event(ev.data)
+            if ev.ev_type == InternalEventType_Network
+                if ev.data.ev_type == NetEventType_NewClient
+                    @debug "NetEventType_NewClient | $(ev.data.client_id)"
+                    new_client(ev.data.client_id)
+                elseif ev.data.ev_type == NetEventType_NewPayload
+                    @debug "NetEventType_NewPayload | $(ev.data.client_id)"
+                    payload_string = unsafe_string(ev.data.payload, ev.data.payload_size)
 
-                payload = Dict(JSON.parse(payload_string))
-                #@show payload
+                    # NOTE: Now that we've copied the payload, it is safe to destroy the event.
+                    destroy_net_event(ev.data)
 
+                    payload = Dict(JSON.parse(payload_string))
+                    #@show payload
+
+                    session = g.sessions[ev.data.client_id]
+
+                    if payload["type"] == "request_rerun"
+                        if session.rerun_task === nothing
+                            rerun(ev.data.client_id, payload)
+                        else
+                            @debug "Rerun already happening. Queueing rerun request. Current queue size: $(length(session.rerun_queue))"
+                            push!(session.rerun_queue, RerunRequest(payload))
+                        end
+                    else
+                        @error "Unknown payload type '$(payload["type"])'"
+                    end
+                elseif ev.data.ev_type == NetEventType_ServerLoopInterrupted
+                    @info "NetEventType_ServerLoopInterrupted"
+                    close(ipc_connection)
+                end
+            elseif ev.ev_type == InternalEventType_Task && ev.data.client_id != Cint(0)
+                @debug "TaskFinished $(ev.data.client_id)"
                 session = g.sessions[ev.data.client_id]
 
-                if payload["type"] == "request_rerun"
-                    if session.rerun_task === nothing
-                        rerun(ev.data.client_id, payload)
+                payload = Dict(
+                    "type" => "response_rerun",
+                    "dev_mode" => g.dev_mode,
+                    "request_id" => ev.data.payload["request_id"],
+                    "root" => ev.data.state["root"],
+                    "error" => nothing
+                )
+
+                payload_string = JSON.json(payload)
+                app_event = create_app_event(AppEventType_NewPayload, session.client_id, payload_string)
+                push_app_event(app_event)
+
+                write(ipc_connection, " ")
+
+                session.rerun_task = nothing
+
+                # Start next rerun request on queue, if any
+                #-------------------------------------------
+                if length(session.rerun_queue) > 0
+                    rerun_request = popfirst!(session.rerun_queue)
+                    if is_rerun_request_valid(session, rerun_request)
+                        @debug "Running next rerun request in queue"
+                        rerun(session.client_id, rerun_request.payload)
                     else
-                        @debug "Rerun already happening. Queueing rerun request. Current queue size: $(length(session.rerun_queue))"
-                        push!(session.rerun_queue, RerunRequest(payload))
-                    end
-                else
-                    @error "Unknown payload type '$(payload["type"])'"
-                end
-            elseif ev.data.ev_type == NetEventType_ServerLoopInterrupted
-                @info "NetEventType_ServerLoopInterrupted"
-                close(ipc_connection)
-            end
-        elseif ev.ev_type == InternalEventType_Task && ev.data.client_id != Cint(0)
-            @debug "TaskFinished $(ev.data.client_id)"
-            session = g.sessions[ev.data.client_id]
-
-            payload = Dict(
-                "type" => "response_rerun",
-                "dev_mode" => g.dev_mode,
-                "request_id" => ev.data.payload["request_id"],
-                "root" => ev.data.state["root"],
-                "error" => nothing
-            )
-
-            payload_string = JSON.json(payload)
-            app_event = create_app_event(AppEventType_NewPayload, session.client_id, payload_string)
-            push_app_event(app_event)
-
-            write(ipc_connection, " ")
-
-            session.rerun_task = nothing
-
-            # Start next rerun request on queue, if any
-            #-------------------------------------------
-            if length(session.rerun_queue) > 0
-                rerun_request = popfirst!(session.rerun_queue)
-                if is_rerun_request_valid(session, rerun_request)
-                    @debug "Running next rerun request in queue"
-                    rerun(session.client_id, rerun_request.payload)
-                else
-                    @debug "Next rerun request in queue is invalid"
-                    payload = Dict(
-                        "type" => "response_rerun",
-                        "dev_mode" => g.dev_mode,
-                        "request_id" => ev.data.payload["request_id"],
-                        "error" => Dict(
-                            "type" => "InvalidState",
+                        @debug "Next rerun request in queue is invalid"
+                        payload = Dict(
+                            "type" => "response_rerun",
+                            "dev_mode" => g.dev_mode,
+                            "request_id" => ev.data.payload["request_id"],
+                            "error" => Dict(
+                                "type" => "InvalidState",
+                            )
                         )
-                    )
-                    payload_string = JSON.json(payload)
-                    app_event = create_app_event(AppEventType_NewPayload, session.client_id, payload_string)
-                    push_app_event(app_event)
-                    write(ipc_connection, " ")
+                        payload_string = JSON.json(payload)
+                        app_event = create_app_event(AppEventType_NewPayload, session.client_id, payload_string)
+                        push_app_event(app_event)
+                        write(ipc_connection, " ")
+                    end
                 end
             end
         end
+    catch e
+        e isa InterruptException || rethrow()
     end
 
     Libdl.dlclose(LIBLIT)
