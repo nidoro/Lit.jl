@@ -20,8 +20,8 @@ science web app.
 
 > **NOTE**: Compatible with julia version 1.10 or greater
 
-- ✅ Linux x86_64 &mdash; also works on WSL
-- ⏳ Windows (will come eventually)
+- ✅ Linux x86_64
+- ✅ Windows 64-bit
 
 ## 🎓 Documentation
 
@@ -107,8 +107,8 @@ when the design of the package is still taking shape and form, we think it is
 best that its development stays centralized on us. In the future we will open
 for code collaboration.
 - **Security and Resilience**: While we believe that Lit has no major
-vulnerability since the first public release, tests are still being performed to
-ensure that. Meanwhile, our advice is that you don't host your Lit web app
+vulnerability since the first public release, tests are still being implemented
+to ensure that. Meanwhile, our advice is that you don't host your Lit web app
 along with sensitive data and don't use it for anything safety-critical. If you
 want to be extra safe, you can run it inside a sandbox like
 [NSJail](https://github.com/google/nsjail)).
