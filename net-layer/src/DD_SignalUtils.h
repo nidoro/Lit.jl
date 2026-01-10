@@ -24,9 +24,33 @@ void SG_SignalReceiver(int sig) {
     }
 }
 
+#ifdef _WIN32
+#include <windows.h>
+BOOL WINAPI WindowsCtrlHandler(DWORD dwCtrlType) {
+    if (dwCtrlType == CTRL_C_EVENT || dwCtrlType == CTRL_BREAK_EVENT) {
+        // Find SIGINT handler
+        if (SG_SignalHandlers[SIGINT].function) {
+            SG_SignalHandlers[SIGINT].function(SG_SignalHandlers[SIGINT].data);
+        }
+        return TRUE;  // Signal handled
+    }
+    return FALSE;
+}
+
+void SG_RegisterHandler(int sig, SG_SignalHandlerFunction function, void* data) {
+    SG_SignalHandlers[sig] = {sig, function, data};
+
+    if (sig == SIGINT) {
+        SetConsoleCtrlHandler(WindowsCtrlHandler, TRUE);
+    } else {
+        signal(sig, SG_SignalReceiver);
+    }
+}
+
+#else
 void SG_RegisterHandler(int sig, SG_SignalHandlerFunction function, void* data) {
     SG_SignalHandlers[sig] = {sig, function, data};
     signal(sig, SG_SignalReceiver);
 }
-
+#endif
 
