@@ -397,7 +397,7 @@ LT_API void LT_StartIPC(void) {
 #ifdef _WIN32
     DD_Assert(result != SOCKET_ERROR);
 #else
-    DD_Assert(result < 0);
+    DD_Assert(result >= 0);
 #endif
 }
 
