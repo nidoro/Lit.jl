@@ -1124,6 +1124,24 @@ void HS_SystemCall(const char* formatString, ...) {
     system(command);
 }
 
+int HS_RmDir(const char *format, ...) {
+    char path[1024];
+    char command[1200];
+    va_list args;
+
+    va_start(args, format);
+    vsnprintf(path, sizeof(path), format, args);
+    va_end(args);
+
+#ifdef _WIN32
+    snprintf(command, sizeof(command), "rmdir /s /q \"%s\" 2>nul", path);
+#else
+    snprintf(command, sizeof(command), "rm -rf \"%s\" 2>/dev/null", path);
+#endif
+
+    return system(command);
+}
+
 int HS_Mkdir(const char *path, int permissions) {
 #ifdef _WIN32
     return _mkdir(path);
@@ -1472,7 +1490,7 @@ bool HS_MaybeAddAllowOriginHeader(HS_HTTPClient* client) {
     
     return false;
 }
-    
+
 int HS_GetFileByURI(HS_CallbackArgs* args) {
     HS_VHost* server = HS_GetVHost(args);
     HS_HTTPClient* client = HS_GetHTTPClientData(args);
@@ -1787,8 +1805,8 @@ int HS_GetFileByURI(HS_CallbackArgs* args) {
         if (server->disableFileCache || (server->memCacheMaxSizeMB > 0 && (int)client->fileSize > HS_MEGA_BYTES(server->memCacheMaxSizeMB))) {
             // Don't cache
             // TODO: Make this work on windows
-            HS_SystemCall("rm -rf %s/.cache-bust", rootDir);
-            HS_SystemCall("rm -rf %s/.ssi-parsed", rootDir);
+            HS_RmDir("%s/.cache-bust", rootDir);
+            HS_RmDir("%s/.ssi-parsed", rootDir);
         } else if (!fileEntry) {
             fileEntry = &server->loadedFiles[server->loadedFilesCount++];
             strcpy(fileEntry->uri, client->uri);
@@ -2363,13 +2381,13 @@ int HS_HTTPCallback(lws* socket, lws_callback_reasons reason, void* userData, vo
       } break;
       
       case LWS_CALLBACK_PROTOCOL_INIT: {
-        HS_SystemCall("rm -rf %s/.cache-bust", server->servedFilesRootDir);
-        HS_SystemCall("rm -rf %s/.ssi-parsed", server->servedFilesRootDir);
+        HS_RmDir("%s/.cache-bust", server->servedFilesRootDir);
+        HS_RmDir("%s/.ssi-parsed", server->servedFilesRootDir);
 
         for (int i = 0; i < server->rootDirMapSize; ++i) {
             const char* path = server->rootDirMap[i].path;
-            HS_SystemCall("rm -rf %s/.cache-bust", path);
-            HS_SystemCall("rm -rf %s/.ssi-parsed", path);
+            HS_RmDir("%s/.cache-bust", path);
+            HS_RmDir("%s/.ssi-parsed", path);
         }
         
         server->h2MaxFrameSize = HS_GetH2FrameMaxSize(server);

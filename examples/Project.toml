@@ -7,5 +7,5 @@ Shapefile = "8e980c4a-a4fe-5da2-b3a7-4b4b0353a2f4"
 VegaDatasets = "0ae4a718-28b7-58ec-9efb-cded64d6d5b4"
 VegaLite = "112f6efa-9a02-5b7d-90c0-432ed331239a"
 
-[sources]
-Lit = {path = ".."}
+[sources.Lit]
+path = ".."
