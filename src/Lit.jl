@@ -251,13 +251,15 @@ function get_dyn_lib_path()::String
         elseif Sys.iswindows()
             return joinpath(@__DIR__, "../build/win64/artifacts-win64/liblit.dll")
         else
-            @error "Unsupported OS"
+            @error "Unsupported OS: $(Sys.KERNEL) $(Sys.ARCH)"
         end
     else
         if Sys.islinux()
             return joinpath(artifact"artifacts", "liblit.so")
+        elseif Sys.iswindows()
+            return joinpath(artifact"artifacts", "liblit.dll")
         else
-            @error "Unsupported OS"
+            @error "Unsupported OS: $(Sys.KERNEL) $(Sys.ARCH)"
         end
     end
     return ""
