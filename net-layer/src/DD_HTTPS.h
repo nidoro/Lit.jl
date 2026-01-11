@@ -1631,6 +1631,7 @@ int HS_GetFileByURI(HS_CallbackArgs* args) {
         
         if (!HS_StartsWith(client->filePath, rootDir)) {
             HS_CloseConnection(client, HTTP_STATUS_NOT_FOUND);
+            httpStatus = (http_status) 0; // Handled
         } else if (!HS_IsRegularFile(client->filePath)) {
             if (HS_IsDirectory(client->filePath)) {
                 strcat(client->filePath, "/index.html");
@@ -1643,183 +1644,188 @@ int HS_GetFileByURI(HS_CallbackArgs* args) {
                     strcpy(client->uri, server->error404File);
                 } else {
                     HS_CloseConnection(client, HTTP_STATUS_NOT_FOUND);
+                    httpStatus = (http_status) 0; // Handled
                 }
             }
         }
-        
-        // Get mimetype
-        //----------------
-        mimeType = lws_get_mimetype(client->filePath, 0);
 
-        if (!mimeType) {
-            if (HS_EndsWith(client->filePath, ".wasm")) {
-                mimeType = "application/wasm";
-            } else if (HS_EndsWith(client->filePath, ".woff2")) {
-                mimeType = "font/woff2";
-            } else if (HS_EndsWith(client->filePath, ".map")) {
-                mimeType = "application/json";
-            } else if (HS_EndsWith(client->filePath, ".zip")) {
-                mimeType = "application/zip";
-            } else if (HS_EndsWith(client->filePath, ".pdf")) {
-                mimeType = "application/pdf";
-            } else if (HS_EndsWith(client->filePath, ".txt")) {
-                mimeType = "text/plain";
-            } else {
-                mimeType = "text/html";
+        if (httpStatus != 0) {
+            // Get mimetype
+            //----------------
+            mimeType = lws_get_mimetype(client->filePath, 0);
+
+            if (!mimeType) {
+                if (HS_EndsWith(client->filePath, ".wasm")) {
+                    mimeType = "application/wasm";
+                } else if (HS_EndsWith(client->filePath, ".woff2")) {
+                    mimeType = "font/woff2";
+                } else if (HS_EndsWith(client->filePath, ".map")) {
+                    mimeType = "application/json";
+                } else if (HS_EndsWith(client->filePath, ".zip")) {
+                    mimeType = "application/zip";
+                } else if (HS_EndsWith(client->filePath, ".pdf")) {
+                    mimeType = "application/pdf";
+                } else if (HS_EndsWith(client->filePath, ".txt")) {
+                    mimeType = "text/plain";
+                } else {
+                    mimeType = "text/html";
+                }
             }
-        }
-        
-        // Cache busting
-        //---------------
-        bool needsCacheBusting = false;
-        if (strcmp(mimeType, "text/html")==0 || strcmp(mimeType, "text/javascript")==0) {
-            for (int i = 0; i < server->cacheBustSize; ++i) {
-                if (HS_EndsWith(server->cacheBust[i], "*")) {
-                    if (HS_StartsWith(client->uri, server->cacheBust[i], strlen(server->cacheBust[i])-1)) {
+
+            // Cache busting
+            //---------------
+            bool needsCacheBusting = false;
+            if (strcmp(mimeType, "text/html")==0 || strcmp(mimeType, "text/javascript")==0) {
+                for (int i = 0; i < server->cacheBustSize; ++i) {
+                    if (HS_EndsWith(server->cacheBust[i], "*")) {
+                        if (HS_StartsWith(client->uri, server->cacheBust[i], strlen(server->cacheBust[i])-1)) {
+                            needsCacheBusting = true;
+                            break;
+                        }
+                    } else if (strcmp(client->uri, server->cacheBust[i])==0) {
                         needsCacheBusting = true;
                         break;
                     }
-                } else if (strcmp(client->uri, server->cacheBust[i])==0) {
-                    needsCacheBusting = true;
-                    break;
                 }
             }
-        }
-        
-        if (needsCacheBusting) {
-            char transformedPath[HS__FilePathCap] = {};
-            char transformedFullPath[HS__FilePathCap*2] = {};
-            sprintf(transformedPath, "/.cache-bust%s", client->uri);
-            sprintf(transformedFullPath, "%s%s", rootDir, transformedPath);
-            
-            if (!HS_IsRegularFile(transformedFullPath)) {
-                HS_CreateFilePath(rootDir, transformedPath);
-                
-                FILE* file = fopen(client->filePath, "rb");
-                char* fileContent = 0;
-                int   fileSize = 0;
-                
-                if (file) {
-                    fileSize = HS_GetFileSize(file);
-                    fileContent = (char*) calloc(1, fileSize+1);
-                    fread(fileContent, fileSize, 1, file);
-                    fclose(file);
-                    
-                    HS_Replace(fileContent, fileContent, fileSize, "-v0000.00.00.00.00.00", server->cacheBustVersion);
-                    HS_SaveFile(fileContent, fileSize, transformedFullPath);
-                    free(fileContent);
-                } else {
-                    //TODO error
+
+            if (needsCacheBusting) {
+                char transformedPath[HS__FilePathCap] = {};
+                char transformedFullPath[HS__FilePathCap*2] = {};
+                sprintf(transformedPath, "/.cache-bust%s", client->uri);
+                sprintf(transformedFullPath, "%s%s", rootDir, transformedPath);
+
+                if (!HS_IsRegularFile(transformedFullPath)) {
+                    HS_CreateFilePath(rootDir, transformedPath);
+
+                    FILE* file = fopen(client->filePath, "rb");
+                    char* fileContent = 0;
+                    int   fileSize = 0;
+
+                    if (file) {
+                        fileSize = HS_GetFileSize(file);
+                        fileContent = (char*) calloc(1, fileSize+1);
+                        fread(fileContent, fileSize, 1, file);
+                        fclose(file);
+
+                        HS_Replace(fileContent, fileContent, fileSize, "-v0000.00.00.00.00.00", server->cacheBustVersion);
+                        HS_SaveFile(fileContent, fileSize, transformedFullPath);
+                        free(fileContent);
+                    } else {
+                        //TODO error
+                    }
                 }
+
+                strcpy(client->filePath, transformedFullPath);
             }
-            
-            strcpy(client->filePath, transformedFullPath);
-        }
-        
-        // Check if needs SSI Parsing
-        //-----------------------------
-        bool needsSSIParsing = false;
-        if (strcmp(mimeType, "text/html")==0) {
-            for (int i = 0; i < server->needsSSIParsingSize; ++i) {
-                if (HS_EndsWith(server->needsSSIParsing[i], "*")) {
-                    if (HS_StartsWith(client->uri, server->needsSSIParsing[i], strlen(server->needsSSIParsing[i])-1)) {
+
+            // Check if needs SSI Parsing
+            //-----------------------------
+            bool needsSSIParsing = false;
+            if (strcmp(mimeType, "text/html")==0) {
+                for (int i = 0; i < server->needsSSIParsingSize; ++i) {
+                    if (HS_EndsWith(server->needsSSIParsing[i], "*")) {
+                        if (HS_StartsWith(client->uri, server->needsSSIParsing[i], strlen(server->needsSSIParsing[i])-1)) {
+                            needsSSIParsing = true;
+                            break;
+                        }
+                    } else if (strcmp(server->needsSSIParsing[i], client->uri)==0) {
                         needsSSIParsing = true;
                         break;
                     }
-                } else if (strcmp(server->needsSSIParsing[i], client->uri)==0) {
-                    needsSSIParsing = true;
-                    break;
                 }
             }
-        }
-        
-        if (needsSSIParsing) {
-            char transformedPath[HS__FilePathCap] = {};
-            char transformedFullPath[HS__FilePathCap*2] = {};
-            sprintf(transformedPath, "/.ssi-parsed%s", client->uri);
-            sprintf(transformedFullPath, "%s%s", rootDir, transformedPath);
-            
-            if (!HS_IsRegularFile(transformedFullPath)) {
-                HS_CreateFilePath(rootDir, transformedPath);
+
+            if (needsSSIParsing) {
+                char transformedPath[HS__FilePathCap] = {};
+                char transformedFullPath[HS__FilePathCap*2] = {};
+                sprintf(transformedPath, "/.ssi-parsed%s", client->uri);
+                sprintf(transformedFullPath, "%s%s", rootDir, transformedPath);
+
+                if (!HS_IsRegularFile(transformedFullPath)) {
+                    HS_CreateFilePath(rootDir, transformedPath);
+                    FILE* file = fopen(client->filePath, "rb");
+
+                    if (file) {
+                        HS_DoSSI(file, rootDir, transformedFullPath);
+                        fclose(file);
+                    } else {
+                        // TODO: handle error
+                    }
+                }
+
+                strcpy(client->filePath, transformedFullPath);
+            }
+
+            // Cache control
+            //---------------
+            if (!server->disableFileCache) {
+                for (int i = 0; i < server->cacheControlMapSize; ++i) {
+                    if (HS_EndsWith(server->cacheControlMap[i].uri, "*")) {
+                        if (HS_StartsWith(client->uri, server->cacheControlMap[i].uri, server->cacheControlMap[i].uriSize-1)) {
+                            cacheControl = server->cacheControlMap[i].cacheString;
+                            cacheControlSize = strlen(server->cacheControlMap[i].cacheString);
+                            break;
+                        }
+                    } else if (server->cacheControlMap[i].uri[0] == '*') {
+                        char* ending = server->cacheControlMap[i].uri+1;
+                        if (HS_EndsWith(client->uri, ending)) {
+                            cacheControl = server->cacheControlMap[i].cacheString;
+                            cacheControlSize = strlen(server->cacheControlMap[i].cacheString);
+                            break;
+                        }
+                    } else if (strcmp(server->cacheControlMap[i].uri, client->uri)==0) {
+                        cacheControl = server->cacheControlMap[i].cacheString;
+                        cacheControlSize = strlen(server->cacheControlMap[i].cacheString);
+                        break;
+                    }
+                }
+            }
+
+            fileEntry = HS_GetFileByPath(server->loadedFiles, server->loadedFilesCount, client->filePath);
+
+            if (fileEntry) {
+                client->fileBuffer = fileEntry->fileBuffer;
+                client->fileContent = fileEntry->fileContent;
+                client->fileSize = fileEntry->fileSize;
+                ++fileEntry->clientsReading;
+                client->fileEntry = fileEntry;
+            } else {
+                // Load resource
+                //---------------
                 FILE* file = fopen(client->filePath, "rb");
-                
                 if (file) {
-                    HS_DoSSI(file, rootDir, transformedFullPath);
+                    client->fileSize = HS_GetFileSize(file);
+                    client->fileBuffer = (char*) calloc(1, LWS_PRE + client->fileSize);
+                    client->fileContent = client->fileBuffer + LWS_PRE;
+                    fread(client->fileContent, client->fileSize, 1, file);
                     fclose(file);
                 } else {
-                    // TODO: handle error
+                    // TODO: ERROR
                 }
             }
-            
-            strcpy(client->filePath, transformedFullPath);
-        }
 
-        // Cache control
-        //---------------
-        if (!server->disableFileCache) {
-            for (int i = 0; i < server->cacheControlMapSize; ++i) {
-                if (HS_EndsWith(server->cacheControlMap[i].uri, "*")) {
-                    if (HS_StartsWith(client->uri, server->cacheControlMap[i].uri, server->cacheControlMap[i].uriSize-1)) {
-                        cacheControl = server->cacheControlMap[i].cacheString;
-                        cacheControlSize = strlen(server->cacheControlMap[i].cacheString);
-                        break;
-                    }
-                } else if (server->cacheControlMap[i].uri[0] == '*') {
-                    char* ending = server->cacheControlMap[i].uri+1;
-                    if (HS_EndsWith(client->uri, ending)) {
-                        cacheControl = server->cacheControlMap[i].cacheString;
-                        cacheControlSize = strlen(server->cacheControlMap[i].cacheString);
-                        break;
-                    }
-                } else if (strcmp(server->cacheControlMap[i].uri, client->uri)==0) {
-                    cacheControl = server->cacheControlMap[i].cacheString;
-                    cacheControlSize = strlen(server->cacheControlMap[i].cacheString);
-                    break;
-                }
+            if (server->disableFileCache || (server->memCacheMaxSizeMB > 0 && (int)client->fileSize > HS_MEGA_BYTES(server->memCacheMaxSizeMB))) {
+                // Don't cache
+                // TODO: Make this work on windows
+                HS_RmDir("%s/.cache-bust", rootDir);
+                HS_RmDir("%s/.ssi-parsed", rootDir);
+            } else if (!fileEntry) {
+                fileEntry = &server->loadedFiles[server->loadedFilesCount++];
+                strcpy(fileEntry->uri, client->uri);
+                strcpy(fileEntry->filePath, client->filePath);
+                fileEntry->fileBuffer = client->fileBuffer;
+                fileEntry->fileContent = client->fileContent;
+                fileEntry->fileSize = client->fileSize;
+                fileEntry->mimeType = mimeType;
+                fileEntry->cacheControl = cacheControl;
+                fileEntry->cacheControlSize = cacheControlSize;
+                fileEntry->clientsReading = 1;
+
+                client->fileEntry = fileEntry;
             }
-        }
-        
-        fileEntry = HS_GetFileByPath(server->loadedFiles, server->loadedFilesCount, client->filePath);
-        
-        if (fileEntry) {
-            client->fileBuffer = fileEntry->fileBuffer;
-            client->fileContent = fileEntry->fileContent;
-            client->fileSize = fileEntry->fileSize;
-            ++fileEntry->clientsReading;
-            client->fileEntry = fileEntry;
         } else {
-            // Load resource
-            //---------------
-            FILE* file = fopen(client->filePath, "rb");
-            if (file) {
-                client->fileSize = HS_GetFileSize(file);
-                client->fileBuffer = (char*) calloc(1, LWS_PRE + client->fileSize);
-                client->fileContent = client->fileBuffer + LWS_PRE;
-                fread(client->fileContent, client->fileSize, 1, file);
-                fclose(file);
-            } else {
-                // TODO: ERROR
-            }
-        }
-
-        if (server->disableFileCache || (server->memCacheMaxSizeMB > 0 && (int)client->fileSize > HS_MEGA_BYTES(server->memCacheMaxSizeMB))) {
-            // Don't cache
-            // TODO: Make this work on windows
-            HS_RmDir("%s/.cache-bust", rootDir);
-            HS_RmDir("%s/.ssi-parsed", rootDir);
-        } else if (!fileEntry) {
-            fileEntry = &server->loadedFiles[server->loadedFilesCount++];
-            strcpy(fileEntry->uri, client->uri);
-            strcpy(fileEntry->filePath, client->filePath);
-            fileEntry->fileBuffer = client->fileBuffer;
-            fileEntry->fileContent = client->fileContent;
-            fileEntry->fileSize = client->fileSize;
-            fileEntry->mimeType = mimeType;
-            fileEntry->cacheControl = cacheControl;
-            fileEntry->cacheControlSize = cacheControlSize;
-            fileEntry->clientsReading = 1;
-
-            client->fileEntry = fileEntry;
+            // Response Not OK.
         }
     } else {
         client->fileBuffer = fileEntry->fileBuffer;
@@ -1834,25 +1840,27 @@ int HS_GetFileByURI(HS_CallbackArgs* args) {
         client->fileEntry = fileEntry;
     }
 
-    // Write headers
-    //-----------------
-    HS_AddHTTPHeaderStatus(client, httpStatus);
-    HS_AddHTTPHeader(client, WSI_TOKEN_HTTP_CONTENT_LENGTH, client->fileSize);
-    HS_AddHTTPHeader(client, WSI_TOKEN_HTTP_CONTENT_TYPE, mimeType);
-    HS_AddHTTPHeader(client, WSI_TOKEN_HTTP_CACHE_CONTROL, cacheControl);
-    
-    // TODO: Connection: keep-alive is not allowed in http 2. I couldn't find
-    // a way to detect if the connection is using h1 or h2, so I'm removing
-    // this header from all responses.
-    // HS_AddHTTPHeader(client, WSI_TOKEN_CONNECTION, "keep-alive");
-    
-    HS_MaybeAddAllowOriginHeader(client);
-    
-    if (client->contentLanguage[0]) {
-        HS_AddHTTPHeader(client, WSI_TOKEN_HTTP_CONTENT_LANGUAGE, client->contentLanguage);
+    if (httpStatus != 0) { // httpStatus == 0 means request already handled.
+        // Write headers
+        //-----------------
+        HS_AddHTTPHeaderStatus(client, httpStatus);
+        HS_AddHTTPHeader(client, WSI_TOKEN_HTTP_CONTENT_LENGTH, client->fileSize);
+        HS_AddHTTPHeader(client, WSI_TOKEN_HTTP_CONTENT_TYPE, mimeType);
+        HS_AddHTTPHeader(client, WSI_TOKEN_HTTP_CACHE_CONTROL, cacheControl);
+
+        // TODO: Connection: keep-alive is not allowed in http 2. I couldn't find
+        // a way to detect if the connection is using h1 or h2, so I'm removing
+        // this header from all responses.
+        // HS_AddHTTPHeader(client, WSI_TOKEN_CONNECTION, "keep-alive");
+
+        HS_MaybeAddAllowOriginHeader(client);
+
+        if (client->contentLanguage[0]) {
+            HS_AddHTTPHeader(client, WSI_TOKEN_HTTP_CONTENT_LANGUAGE, client->contentLanguage);
+        }
+
+        HS_WriteResponse(client);
     }
-    
-    HS_WriteResponse(client);
     
     return callbackResult;
 }
