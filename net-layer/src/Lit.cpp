@@ -433,6 +433,7 @@ LT_API void* LT_RunServer(void*) {
 
     snprintf(tempBuffer, sizeof(tempBuffer), "%s/%s", g.projectPath, ".Lit/served-files");
     HS_SetServedFilesRootDir(&g.hserver, "lit-app", tempBuffer);
+    HS_Set404File(&g.hserver, "lit-app", "/cache/pages/404.html");
 
     snprintf(tempBuffer, sizeof(tempBuffer), "%s/%s", g.litPackageRootPath, "served-files");
     HS_AddServedFilesDir(&g.hserver, "lit-app", "/Lit.jl", tempBuffer);

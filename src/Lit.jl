@@ -1720,10 +1720,26 @@ function create_page_html(page::PageConfig, output_path::String)::Nothing
         "<title>Lit App</title>" => "<title>$(title)</title>",
         "<meta property=\"og:description\" content=\"Web app made with Lit.jl\">" => "<meta property=\"og:description\" content=\"$(description)\">",
         "<!-- LIT PAGE STYLE -->" => "<style>$(page.style)</style>"
-    )
+        )
 
     write(output_path, page_html)
     page.file_path = output_path
+    return nothing
+end
+
+function create_404_html(output_path::String)::Nothing
+    template = read(joinpath(@__DIR__, "../served-files/Lit404Template.html"), String)
+
+    title = g.base_page_config.title
+    description = g.base_page_config.description
+
+    page_html = replace(
+        template,
+        "<title>Lit App</title>" => "<title>$(title)</title>",
+        "<meta property=\"og:description\" content=\"Web app made with Lit.jl\">" => "<meta property=\"og:description\" content=\"$(description)\">",
+    )
+
+    write(output_path, page_html)
     return nothing
 end
 
@@ -1877,7 +1893,10 @@ function rerun(client_id::Cint, payload::Dict)::Task
 
         g.first_pass = false
         session.first_pass = false
-        get_page(get_url_path()).first_pass = false
+        page = get_current_page()
+        if page !== missing
+            page.first_pass = false
+        end
 
         if (payload["request_id"] != 0)
             put!(g.internal_events, InternalEvent(InternalEventType_Task, task))
@@ -1915,7 +1934,11 @@ function is_app_first_pass()::Bool
 end
 
 function is_page_first_pass()::Bool
-    return get_page(get_url_path()).first_pass
+    page = get_current_page()
+    if page !== missing
+        return page.first_pass
+    end
+    return false
 end
 
 macro app_startup(block)
@@ -1949,8 +1972,14 @@ function get_url_path()::String
     return task.payload["location"]["pathname"]
 end
 
-get_current_page()::PageConfig = get_page(get_url_path())
-is_on_page(page_path::String)::Bool = (page_path in get_current_page().uris)
+get_current_page()::Union{PageConfig, Missing} = get_page(get_url_path())
+function is_on_page(page_path::String)::Bool
+    page = get_current_page()
+    if page !== missing
+        return page_path in page.uris
+    end
+    return false
+end
 
 function lock_client(client_id::Cint)::Nothing
     ccall((:LT_LockClient, LIT_SO), Cvoid, (Cint,), client_id)
@@ -2039,7 +2068,11 @@ function start_app(script_path::String="app.jl"; host_name::String="localhost", 
     g.initialized = true
     g.script_path = joinpath(START_CWD, script_path)
 
+    rm(".Lit/served-files/cache", recursive=true, force=true)
     mkpath(".Lit/served-files/cache/pages")
+
+    g.base_page_config.title = "Lit App"
+    g.base_page_config.description = "Web app made with Lit.jl"
 
     # Dry run to try and initialize the app
     #-------------------------------------------
@@ -2048,8 +2081,8 @@ function start_app(script_path::String="app.jl"; host_name::String="localhost", 
         "request_id" => 0,
         "events" => [],
         "location" => Dict(
-            "href" => "https://$(host_name):$(port)/",
-            "pathname" => "/",
+            "href" => "https://$(host_name):$(port)",
+            "pathname" => "",
             "host" => "$(host_name):$(port)",
             "hostname" => host_name, "search" => ""
         )
@@ -2119,11 +2152,18 @@ function start_app(script_path::String="app.jl"; host_name::String="localhost", 
         push_uri_mapping("/", replace(g.base_page_config.file_path, ".Lit/served-files" => ""))
     end
 
+    # Create 404.html
+    #-------------------
+    create_404_html(".Lit/served-files/cache/pages/404.html")
+
+    # Net-layer IPC listener loop.
+    # When a net-layer event happens, it forwards the event to the App-layer
+    # loop by pushing the event to the `internal_events` channel.
+    #---------------------------------------------------------------------------
     Threads.@spawn begin
         stop_loop = false
 
         while isopen(ipc_connection) && !stop_loop
-            #readavailable(ipc_connection)
             read(ipc_connection, UInt8)
 
             ev = pop_net_event()
@@ -2138,6 +2178,11 @@ function start_app(script_path::String="app.jl"; host_name::String="localhost", 
         end
     end
 
+    # App-layer loop.
+    # It handles events that are pushed to the `internal_events` channel. These
+    # can be either net-layer events (e.g. client connection) or app-layer
+    # events (e.g. rerun finished).
+    #---------------------------------------------------------------------------
     try
         while isopen(ipc_connection)
             ev = take!(g.internal_events)
