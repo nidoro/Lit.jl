@@ -45,7 +45,7 @@ h1("To-do list", icon="material/checklist", icon_color="green")
 
 row(fill_width=true, align_items="flex-end") do
     new_item_name = text_input("Text input", fill_width=true, placeholder="Add to-do item", show_label=false, id="input_new_item")
-    if button("Add", style="primary", icon="material/add") && length(new_item_name) > 0
+    if button("Add", style="primary", icon="material/add") && new_item_name !== nothing && length(new_item_name) > 0
         push!(session.items, Item(new_item_name, false))
         set_value("input_new_item", "")
     end
