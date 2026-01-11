@@ -1,0 +1,19 @@
+
+[[artifacts]]
+git-tree-sha1 = "3adcd0275d1220e11057e04ce9392826a13e7d8c"
+os = "linux"
+arch = "x86_64"
+
+    [[artifacts.download]]
+    url = "https://github.com/nidoro/Lit.jl/releases/download/v0.3.0/artifacts-linux-x86_64.tar.gz"
+    sha256 = "7e09665d510134fbbc0749077fecf1869d38188aaf4c8ad3e94dcdd85250d72a"
+
+[[artifacts]]
+git-tree-sha1 = "ae95d258a2e3708aa696895f69c33244c7cf4fc0"
+os = "windows"
+arch = "x86_64"
+
+    [[artifacts.download]]
+    url = "https://github.com/nidoro/Lit.jl/releases/download/v0.3.0/artifacts-win64.tar.gz"
+    sha256 = "6e96c8d06f9d6f0d3adad727ddf0c946dc99c8c10728a0680f06ac8e28f83742"
+
