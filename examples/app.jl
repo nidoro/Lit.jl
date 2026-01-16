@@ -22,10 +22,10 @@ elseif is_on_page("/todo")
 elseif is_on_page("/avatar")
     page_script = "10-avatar.jl"
 elseif is_on_page("/forecast")
-    page_script = "13-forecast.jl"
+    #page_script = "13-forecast.jl"
     layout_style = "wide"
 elseif is_on_page("/seattle-weather")
-    page_script = "15-seattle-weather.jl"
+    #page_script = "15-seattle-weather.jl"
     layout_style = "wide"
 elseif is_on_page("/fragment-example")
     page_script = "50-fragment-example.jl"
@@ -50,7 +50,11 @@ if is_on_page("/")
     end
 
     column(fill_width=true, align_items="center") do
-        h1("✨ Lit.jl Demo Apps")
+        row(align_items="center") do
+            image("/Lit.jl/images/lit-logo.svg", css=Dict("max-height" => "70px"))
+            h1("Lit.jl Demo Apps")
+        end
+
         space(height="1rem")
 
         text("A few simple apps that showcase Lit.jl features!")

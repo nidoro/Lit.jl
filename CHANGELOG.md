@@ -2,7 +2,21 @@
 
 ### v0.3.1 (???)
 
-- Bug-fix: unqueued rerun request are now validated as well.
+- Bug-fix: Unqueued rerun request are now validated as well.
+- Bug-fix: Implemented invalid state acknoledgment system, to avoid this
+situation:
+    1. Client sends 2 events in a row. The second is invalid, given the first
+    one. Invalid state is sent from server to client.
+    2. Before receiving the invalid state message, the client sends a third
+    event, which is valid. Then restores old state and unfades.
+    3. The server processes the new event and returns the newer state.
+    4. An update then happens in the client, which is unnexpected, because the
+    return from transparency should mean that all events have been processed,
+    and there are no other ones in queue.
+- Cache-busting: Introduced cache-busting system. Generated HTML pages now use
+cache-bustable links to resources that are likely to change from version to
+version of Lit.
+- New logo.
 
 ### v0.3.0 (2026-01-11)
 
