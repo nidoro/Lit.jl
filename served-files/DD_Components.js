@@ -1873,7 +1873,7 @@ class DD_Input extends HTMLElement {
         let thisElem = this;
 
         if (this.selectMenu.hasAttribute("dd-multiple")) {
-            for (let op of selection.toReversed()) {
+            for (let op of selection.slice().reverse()) {
                 const elem = document.createElement("dd-selected-option");
                 elem.innerText = this.selectMenu.getOptionText(op);
 
@@ -1911,7 +1911,7 @@ class DD_Input extends HTMLElement {
     }
 
     restoreOptionsOrder() {
-        for (const op of this.optionsOriginalOrder.toReversed()) {
+        for (const op of this.optionsOriginalOrder.slice().reverse()) {
             this.selectMenu.prepend(op);
         }
     }
@@ -1930,7 +1930,7 @@ class DD_Input extends HTMLElement {
 
             let options = this.selectMenu.querySelectorAll("dd-option");
 
-            for (const op of optionWeights.toReversed()) {
+            for (const op of optionWeights.slice().reverse()) {
                 this.selectMenu.prepend(op.elem);
             }
         } else {
@@ -3843,6 +3843,12 @@ style.textContent = `
         opacity: var(--button-opacity, 1);
         
         transition: var(--button-transition, none);
+
+        /* Disable text selection */
+        user-select: none;
+        -webkit-user-select: none; /* Safari */
+        -moz-user-select: none;    /* Firefox */
+        -ms-user-select: none;     /* IE10+/Edge */
     }
     
     dd-button::after, .dd-button::after {
