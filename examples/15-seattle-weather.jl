@@ -104,10 +104,6 @@ end
     selected_years = row().checkboxes("Years", ["2015", "2014", "2013", "2012"], initial_value=["2015", "2014", "2013", "2012"])
     selected_years = parse.(Int, selected_years)
 
-#     if !(2013 in selected_years)
-#         sleep(3)
-#     end
-
     df = filter(row -> year(row.date) in selected_years, page_data.full_df)
 
     cols = columns([75,25], show_border=true, padding=".8rem")
