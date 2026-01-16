@@ -1,6 +1,6 @@
 # CHANGELOG
 
-### v0.3.1 (???)
+### v0.3.1 2026-01-16)
 
 - Bug-fix: Unqueued rerun request are now validated as well.
 - Bug-fix: Implemented invalid state acknoledgment system, to avoid this
