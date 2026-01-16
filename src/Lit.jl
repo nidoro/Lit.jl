@@ -212,6 +212,7 @@ end
     widget_defaults::Dict{String, Any} = Dict{String, Any}()
     rerun_task::Union{Task, Nothing} = nothing
     rerun_queue::Vector{RerunRequest} = Vector{RerunRequest}()
+    waiting_invalid_state_ack::Bool = false
 end
 
 @with_kw mutable struct Global
@@ -1725,7 +1726,7 @@ function create_page_html(page::PageConfig, output_path::String)::Nothing
         "<title>Lit App</title>" => "<title>$(title)</title>",
         "<meta property=\"og:description\" content=\"Web app made with Lit.jl\">" => "<meta property=\"og:description\" content=\"$(description)\">",
         "<!-- LIT PAGE STYLE -->" => "<style>$(page.style)</style>"
-        )
+    )
 
     write(output_path, page_html)
     page.file_path = output_path
@@ -2065,6 +2066,7 @@ function return_invalid_request(client_id::Cint, request_id::Int)::Nothing
     app_event = create_app_event(AppEventType_NewPayload, client_id, payload_string)
     push_app_event(app_event)
     write(g.ipc_connection, " ")
+    g.sessions[client_id].waiting_invalid_state_ack = true
     return nothing
 end
 
@@ -2238,7 +2240,7 @@ function start_app(
 
                     session = g.sessions[ev.data.client_id]
 
-                    if payload["type"] == "request_rerun"
+                    if payload["type"] == "request_rerun" && !session.waiting_invalid_state_ack
                         rerun_request = RerunRequest(payload)
                         if session.rerun_task === nothing
                             if is_rerun_request_valid(session, rerun_request)
@@ -2250,6 +2252,8 @@ function start_app(
                             @debug "Rerun already happening. Queueing rerun request. Current queue size: $(length(session.rerun_queue))"
                             push!(session.rerun_queue, RerunRequest(payload))
                         end
+                    elseif payload["type"] == "ack_invalid_state"
+                        session.waiting_invalid_state_ack = false
                     else
                         @error "Unknown payload type '$(payload["type"])'"
                     end

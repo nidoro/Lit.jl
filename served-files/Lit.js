@@ -48,6 +48,12 @@ function requestUpdate(events) {
     });
 }
 
+function ackInvalidState() {
+    wsSendObj({
+        type: "ack_invalid_state",
+    });
+}
+
 function btnClick(event) {
     requestUpdate([{
         type: "click",
@@ -855,7 +861,10 @@ async function wsOnMessage(event) {
                 g.lastValidRerunResponse = msg;
             }
         } else if (msg.error.type == "InvalidState") {
-            displayRerunResponse(g.lastValidRerunResponse);
+            if (g.lastValidRerunResponse) {
+                displayRerunResponse(g.lastValidRerunResponse);
+            }
+            ackInvalidState();
         }
     }
 }
