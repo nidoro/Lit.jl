@@ -5,15 +5,15 @@ os = "linux"
 arch = "x86_64"
 
     [[artifacts.download]]
-    url = "https://github.com/nidoro/Lit.jl/releases/download/v0.3.1/artifacts-linux-x86_64.tar.gz"
-    sha256 = "aaa97c1e5014077f8d2b20231b179a14a238ff9de38775820cd838bfc0074439"
+    url = "https://github.com/nidoro/Lit.jl/releases/download/v0.3.2/artifacts-linux-x86_64.tar.gz"
+    sha256 = "edce59ef1c6c9e0dd7fd9ff00f271cb899da1afbc4e3de08f51304a475ac69cf"
 
 [[artifacts]]
-git-tree-sha1 = "1211422f4576ce5eddb6cd4a24dd0147be998bbe"
+git-tree-sha1 = "98b35f7fb1b06477a70781342895ed5aefc375b3"
 os = "windows"
 arch = "x86_64"
 
     [[artifacts.download]]
-    url = "https://github.com/nidoro/Lit.jl/releases/download/v0.3.1/artifacts-win64.tar.gz"
-    sha256 = "0f0aa43147609c1e2051e01af450649d6c797ebb1ccd5474a1966f29e727c9d1"
+    url = "https://github.com/nidoro/Lit.jl/releases/download/v0.3.2/artifacts-win64.tar.gz"
+    sha256 = "16d79bf511beca89c7f70fef6ae95bcf14be84459d63a3721ef1fccd50a24fbd"
 
