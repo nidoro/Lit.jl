@@ -19,7 +19,7 @@ subdirectories.
 don't care for the name of the file you want to serve, nor where it lives, as
 long as it is "serveable", i.e. it lives somewhere inside `.Lit/served-files/`.
 `gen_resource_path()` generates a path with a random file name with a given
-extension inside `.Lit/served-files/cache`. You are then supposed to save your
+extension inside `.Lit/served-files/generated`. You are then supposed to save your
 file in the returned path and pass this path to the wiget you want.
 
 For instance, consider an app that displays a plot given some user input. The
@@ -56,5 +56,5 @@ function gen_resource_path(extension::String; lifetime::String="session")::Strin
 
 ### Return Value
 
-A random file path inside `.Lit/served-files/cache/`, with extension
+A random file path inside `.Lit/served-files/generated/` with extension
 `extension`.
