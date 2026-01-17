@@ -300,5 +300,3 @@ end # fragment
 
 space(height="200px")
 
-sleep(3)
-
