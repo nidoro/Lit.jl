@@ -5,9 +5,9 @@ Manifest.toml
 .kate*
 
 examples/Manifest*
-examples/.Lit/companion-host.json
-examples/.Lit/certs
-examples/.Lit/served-files/generated
+examples/.Magic/companion-host.json
+examples/.Magic/certs
+examples/.Magic/served-files/generated
 examples/data/
 
 net-layer/third/openssl-OpenSSL_1_1_1t/*.so*

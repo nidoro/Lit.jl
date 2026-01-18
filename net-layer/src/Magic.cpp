@@ -21,14 +21,14 @@
 #define MIN(a, b) (a < b ? a : b)
 
 #ifdef _WIN32
-#define LT_API __declspec(dllexport)
+#define MG_API __declspec(dllexport)
 #else
-#define LT_API
+#define MG_API
 #endif
 
 extern "C" {
 
-struct LT_Client {
+struct MG_Client {
     int id;
 
     HS_PacketQueue writeQueue;
@@ -43,37 +43,37 @@ struct LT_Client {
     pthread_mutex_t* mutex;
 };
 
-enum LT_NetEventType {
-    LT_NetEventType_None,
-    LT_NetEventType_NewClient,
-    LT_NetEventType_ClientLeft,
-    LT_NetEventType_NewPayload,
-    LT_NetEventType_ServerLoopInterrupted
+enum MG_NetEventType {
+    MG_NetEventType_None,
+    MG_NetEventType_NewClient,
+    MG_NetEventType_ClientLeft,
+    MG_NetEventType_NewPayload,
+    MG_NetEventType_ServerLoopInterrupted
 };
 
-struct LT_NetEvent {
-    LT_NetEventType type;
+struct MG_NetEvent {
+    MG_NetEventType type;
     int clientId;
     char* payload;
     int payloadSize;
 };
 
-enum LT_AppEventType {
-    LT_AppEventType_None,
-    LT_AppEventType_NewPayload,
+enum MG_AppEventType {
+    MG_AppEventType_None,
+    MG_AppEventType_NewPayload,
 };
 
-struct LT_AppEvent {
-    LT_AppEventType type;
+struct MG_AppEvent {
+    MG_AppEventType type;
     int clientId;
     char* payload;
     int payloadSize;
 };
 
-struct LT_Global {
+struct MG_Global {
     pthread_t threadId;
     int ipcPort;
-    char litPackageRootPath[PATH_MAX];
+    char magicPackageRootPath[PATH_MAX];
 
 #ifdef _WIN32
     SOCKET fdSocket;
@@ -96,19 +96,19 @@ struct LT_Global {
     void (*appNewClient)(void* statePtr);
     void (*appUpdate)(void* statePtr);
 
-    LT_NetEvent* netEvents;
-    LT_AppEvent* appEvents;
+    MG_NetEvent* netEvents;
+    MG_AppEvent* appEvents;
 
     pthread_mutex_t netEventsMutex;
     pthread_mutex_t appEventsMutex;
 
-    LT_Client** clients;
+    MG_Client** clients;
     int nextClientId;
 };
 
-LT_Global g;
+MG_Global g;
 
-LT_API void LT_WakeUpAppLayer() {
+MG_API void MG_WakeUpAppLayer() {
 #ifdef _WIN32
     int sent = send(g.fdSocket, "x", 1, 0);
     if (sent == SOCKET_ERROR) {
@@ -123,7 +123,7 @@ LT_API void LT_WakeUpAppLayer() {
 #endif
 }
 
-LT_API LT_Client* LT_GetClient(int id) {
+MG_API MG_Client* MG_GetClient(int id) {
     for (int i = 0; i < arrcount(g.clients); ++i) {
         if (g.clients[i]->id == id)
             return g.clients[i];
@@ -133,8 +133,8 @@ LT_API LT_Client* LT_GetClient(int id) {
 
 // NOTE: Net events are created and pushed by the network layer and poped and
 // destroyed by the app layer.
-LT_API LT_NetEvent LT_CreateNetEvent(LT_NetEventType type, int clientId, char* payload, int payloadSize) {
-    LT_NetEvent ev = {
+MG_API MG_NetEvent MG_CreateNetEvent(MG_NetEventType type, int clientId, char* payload, int payloadSize) {
+    MG_NetEvent ev = {
         .type=type,
         .clientId=clientId,
         .payload=payload,
@@ -148,22 +148,22 @@ LT_API LT_NetEvent LT_CreateNetEvent(LT_NetEventType type, int clientId, char* p
     return ev;
 }
 
-LT_API void LT_DestroyNetEvent(LT_NetEvent ev) {
+MG_API void MG_DestroyNetEvent(MG_NetEvent ev) {
     if (ev.payload) {
         arrfree(ev.payload);
     }
 }
 
-LT_API void LT_PushNetEvent(LT_NetEvent ev) {
+MG_API void MG_PushNetEvent(MG_NetEvent ev) {
     pthread_mutex_lock(&g.netEventsMutex);
     arradd(g.netEvents, ev);
     pthread_mutex_unlock(&g.netEventsMutex);
 }
 
-LT_API LT_NetEvent LT_PopNetEvent() {
+MG_API MG_NetEvent MG_PopNetEvent() {
     pthread_mutex_lock(&g.netEventsMutex);
 
-    LT_NetEvent ev = {};
+    MG_NetEvent ev = {};
     if (arrcount(g.netEvents)) {
         ev = g.netEvents[0];
         arrremove(g.netEvents, 0);
@@ -176,8 +176,8 @@ LT_API LT_NetEvent LT_PopNetEvent() {
 
 // NOTE: App events are created and pushed by the app layer and poped and
 // destroyed by the net layer.
-LT_API LT_AppEvent LT_CreateAppEvent(LT_AppEventType type, int clientId, char* payload, int payloadSize) {
-    LT_AppEvent ev = {
+MG_API MG_AppEvent MG_CreateAppEvent(MG_AppEventType type, int clientId, char* payload, int payloadSize) {
+    MG_AppEvent ev = {
         .type=type,
         .clientId=clientId,
         .payload=payload,
@@ -202,21 +202,21 @@ LT_API LT_AppEvent LT_CreateAppEvent(LT_AppEventType type, int clientId, char* p
     return ev;
 }
 
-LT_API void LT_DestroyAppEvent(LT_AppEvent ev) {
+MG_API void MG_DestroyAppEvent(MG_AppEvent ev) {
     // NOTE: The payload memory is free'd by DD_HTTPS, after sending the payload.
     // So I guess we don't have to do anything here...
 }
 
-LT_API void LT_PushAppEvent(LT_AppEvent ev) {
+MG_API void MG_PushAppEvent(MG_AppEvent ev) {
     pthread_mutex_lock(&g.appEventsMutex);
     arradd(g.appEvents, ev);
     pthread_mutex_unlock(&g.appEventsMutex);
 }
 
-LT_API LT_AppEvent LT_PopAppEvent() {
+MG_API MG_AppEvent MG_PopAppEvent() {
     pthread_mutex_lock(&g.appEventsMutex);
 
-    LT_AppEvent ev = {};
+    MG_AppEvent ev = {};
     if (arrcount(g.appEvents)) {
         ev = g.appEvents[0];
         arrremove(g.appEvents, 0);
@@ -227,48 +227,48 @@ LT_API LT_AppEvent LT_PopAppEvent() {
     return ev;
 }
 
-LT_API void LT_LockClient(int clientId) {
-    LT_Client* wcClient = LT_GetClient(clientId);
+MG_API void MG_LockClient(int clientId) {
+    MG_Client* wcClient = MG_GetClient(clientId);
     if (wcClient) {
         pthread_mutex_lock(wcClient->mutex);
     }
 }
 
-LT_API void LT_UnlockClient(int clientId) {
-    LT_Client* wcClient = LT_GetClient(clientId);
+MG_API void MG_UnlockClient(int clientId) {
+    MG_Client* wcClient = MG_GetClient(clientId);
     if (wcClient) {
         pthread_mutex_unlock(wcClient->mutex);
     }
 }
 
-LT_API int LT_ProcessIncomingMessage(HS_CallbackArgs* args) {
-    LT_Client* wcClient = HS_GetClientData(LT_Client, args);
+MG_API int MG_ProcessIncomingMessage(HS_CallbackArgs* args) {
+    MG_Client* wcClient = HS_GetClientData(MG_Client, args);
 
     LU_Log(LU_Debug, "IncomingMessage | Bytes: %d | Payload: %.*s", wcClient->readSize, wcClient->readSize, wcClient->readBuffer);
 
-    LT_NetEvent ev = LT_CreateNetEvent(
-        LT_NetEventType_NewPayload,
+    MG_NetEvent ev = MG_CreateNetEvent(
+        MG_NetEventType_NewPayload,
         wcClient->id,
         wcClient->readBuffer,
         wcClient->readSize
     );
 
-    LT_PushNetEvent(ev);
+    MG_PushNetEvent(ev);
 
-    LT_WakeUpAppLayer();
+    MG_WakeUpAppLayer();
 
     return 0;
 }
 
-LT_API int HS_CALLBACK(handleEvent, args) {
+MG_API int HS_CALLBACK(handleEvent, args) {
     HS_VHost* vhost = HS_GetVHost(args->socket);
-    LT_Client* wcClient = HS_GetClientData(LT_Client, args);
+    MG_Client* wcClient = HS_GetClientData(MG_Client, args);
 
     LU_Log(LU_Debug, "HandleLWSEvent | %s", HS_ToString(args->reason));
 
     switch (args->reason) {
         case LWS_CALLBACK_RECEIVE: {
-            HS_ReceiveMessageFragment(args, &wcClient->readBuffer, &wcClient->readSize, &wcClient->readCap, LT_ProcessIncomingMessage);
+            HS_ReceiveMessageFragment(args, &wcClient->readBuffer, &wcClient->readSize, &wcClient->readCap, MG_ProcessIncomingMessage);
         } break;
 
         case LWS_CALLBACK_SERVER_WRITEABLE: {
@@ -282,12 +282,12 @@ LT_API int HS_CALLBACK(handleEvent, args) {
             pthread_mutex_init(wcClient->mutex, 0);
             arradd(g.clients, wcClient);
 
-            LT_PushNetEvent({
-                .type = LT_NetEventType_NewClient,
+            MG_PushNetEvent({
+                .type = MG_NetEventType_NewClient,
                 .clientId = wcClient->id,
             });
 
-            LT_WakeUpAppLayer();
+            MG_WakeUpAppLayer();
         } break;
 
         case LWS_CALLBACK_PROTOCOL_INIT: {
@@ -300,12 +300,12 @@ LT_API int HS_CALLBACK(handleEvent, args) {
         } break;
 
         case LWS_CALLBACK_CLOSED: {
-            LT_PushNetEvent({
-                .type = LT_NetEventType_ClientLeft,
+            MG_PushNetEvent({
+                .type = MG_NetEventType_ClientLeft,
                 .clientId = wcClient->id,
             });
 
-            LT_WakeUpAppLayer();
+            MG_WakeUpAppLayer();
 
             pthread_mutex_lock(wcClient->mutex);
             arrremovematch(g.clients, wcClient);
@@ -317,11 +317,11 @@ LT_API int HS_CALLBACK(handleEvent, args) {
             read(g.fdSocket, buf, sizeof(buf));
 
             while (arrcount(g.appEvents)) {
-                LT_AppEvent ev = LT_PopAppEvent();
-                wcClient = LT_GetClient(ev.clientId);
+                MG_AppEvent ev = MG_PopAppEvent();
+                wcClient = MG_GetClient(ev.clientId);
 
                 if (wcClient) {
-                    if (ev.type == LT_AppEventType_NewPayload) {
+                    if (ev.type == MG_AppEventType_NewPayload) {
                         LU_Log(LU_Debug, "AppEventType_NewPayload | %d | %.*s", ev.clientId, MIN(ev.payloadSize-LWS_PRE, 256), ev.payload+LWS_PRE);
 
                         HS_Packet packet = {
@@ -332,7 +332,7 @@ LT_API int HS_CALLBACK(handleEvent, args) {
                         };
 
                         HS_SendPacket(&wcClient->writeQueue, packet);
-                        LT_DestroyAppEvent(ev);
+                        MG_DestroyAppEvent(ev);
                     } else {
                         DD_Assert2(0, "Unknown event %d", ev.type);
                     }
@@ -348,35 +348,35 @@ LT_API int HS_CALLBACK(handleEvent, args) {
     return 0;
 }
 
-LT_API void LT_PushURIMapping(const char* uri, int uriSize, const char* filePath, int filePathSize) {
+MG_API void MG_PushURIMapping(const char* uri, int uriSize, const char* filePath, int filePathSize) {
     char uriBuf[PATH_MAX] = {};
     char filePathBuf[PATH_MAX] = {};
     strncpy(uriBuf, uri, uriSize);
     strncpy(filePathBuf, filePath, filePathSize);
-    HS_PushURIMapping(&g.hserver, "lit-app", uriBuf, filePathBuf);
+    HS_PushURIMapping(&g.hserver, "magic-app", uriBuf, filePathBuf);
 }
 
-LT_API void LT_ClearURIMapping() {
-    HS_ClearURIMapping(&g.hserver, "lit-app");
+MG_API void MG_ClearURIMapping() {
+    HS_ClearURIMapping(&g.hserver, "magic-app");
 }
 
-LT_API void LT_SetStateSize(size_t size) {
+MG_API void MG_SetStateSize(size_t size) {
     g.appStateSize = size;
 }
 
-LT_API void LT_HandleSigInt(void* data) {
+MG_API void MG_HandleSigInt(void* data) {
     HS_Stop(&g.hserver);
 
-    LT_NetEvent ev = LT_CreateNetEvent(LT_NetEventType_ServerLoopInterrupted, 0, 0, 0);
-    LT_PushNetEvent(ev);
-    LT_WakeUpAppLayer();
+    MG_NetEvent ev = MG_CreateNetEvent(MG_NetEventType_ServerLoopInterrupted, 0, 0, 0);
+    MG_PushNetEvent(ev);
+    MG_WakeUpAppLayer();
     close(g.fdSocket);
 
     printf("\r  \n");
     LU_Log(LU_Debug, "ServerLoopInterrupted");
 }
 
-LT_API void LT_StartIPC(void) {
+MG_API void MG_StartIPC(void) {
 #ifdef _WIN32
     static int wsa_initialized = 0;
     if (!wsa_initialized) {
@@ -408,7 +408,7 @@ LT_API void LT_StartIPC(void) {
 #endif
 }
 
-LT_API void* LT_RunServer(void*) {
+MG_API void* MG_RunServer(void*) {
     if (g.verbose) {
         HS_SetLogLevel(LLL_ERR | LLL_WARN | LLL_NOTICE | LLL_INFO | LLL_DEBUG);
     } else {
@@ -416,78 +416,78 @@ LT_API void* LT_RunServer(void*) {
     }
 
     g.nextClientId = 1;
-    g.clients = arralloc(LT_Client*, 100);
+    g.clients = arralloc(MG_Client*, 100);
 
-    g.netEvents = arralloc(LT_NetEvent, 100);
-    g.appEvents = arralloc(LT_AppEvent, 100);
+    g.netEvents = arralloc(MG_NetEvent, 100);
+    g.appEvents = arralloc(MG_AppEvent, 100);
 
-    bool disableSSL = !HS_IsDirectory(".Lit/certs");
+    bool disableSSL = !HS_IsDirectory(".Magic/certs");
 
     g.hserver = HS_CreateServer(0, disableSSL);
     HS_InitServer(&g.hserver, true);
-    HS_AddVHost(&g.hserver, "lit-app");
-    HS_SetLWSVHostConfig(&g.hserver, "lit-app", pt_serv_buf_size, HS_KILO_BYTES(12));
-    HS_SetLWSProtocolConfig(&g.hserver, "lit-app", "HTTP", rx_buffer_size, HS_KILO_BYTES(12));
-    HS_SetHTTPGetHandler(&g.hserver, "lit-app", HS_GetFileByURI);
-    HS_SetVHostHostName(&g.hserver, "lit-app", g.appHostName);
-    HS_SetVHostPort(&g.hserver, "lit-app", g.appPort);
-    HS_AddProtocol(&g.hserver, "lit-app", "ws", handleEvent, LT_Client);
-    HS_PushCacheBust(&g.hserver, "lit-app", "*.html");
-    HS_PushCacheControlMapping(&g.hserver, "lit-app", "*.html", "no-cache, no-store, must-revalidate");
-    HS_PushCacheControlMapping(&g.hserver, "lit-app", "/*", "max-age=2592000");
+    HS_AddVHost(&g.hserver, "magic-app");
+    HS_SetLWSVHostConfig(&g.hserver, "magic-app", pt_serv_buf_size, HS_KILO_BYTES(12));
+    HS_SetLWSProtocolConfig(&g.hserver, "magic-app", "HTTP", rx_buffer_size, HS_KILO_BYTES(12));
+    HS_SetHTTPGetHandler(&g.hserver, "magic-app", HS_GetFileByURI);
+    HS_SetVHostHostName(&g.hserver, "magic-app", g.appHostName);
+    HS_SetVHostPort(&g.hserver, "magic-app", g.appPort);
+    HS_AddProtocol(&g.hserver, "magic-app", "ws", handleEvent, MG_Client);
+    HS_PushCacheBust(&g.hserver, "magic-app", "*.html");
+    HS_PushCacheControlMapping(&g.hserver, "magic-app", "*.html", "no-cache, no-store, must-revalidate");
+    HS_PushCacheControlMapping(&g.hserver, "magic-app", "/*", "max-age=2592000");
     if (!disableSSL) {
-        HS_SetCertificate(&g.hserver, "lit-app", ".Lit/certs/certificate.crt", ".Lit/certs/private.key");
+        HS_SetCertificate(&g.hserver, "magic-app", ".Magic/certs/certificate.crt", ".Magic/certs/private.key");
     }
 
     char tempBuffer[2*PATH_MAX];
 
-    snprintf(tempBuffer, sizeof(tempBuffer), "%s/%s", g.projectPath, ".Lit/served-files");
-    HS_SetServedFilesRootDir(&g.hserver, "lit-app", tempBuffer);
-    HS_Set404File(&g.hserver, "lit-app", "/generated/app/pages/404.html");
+    snprintf(tempBuffer, sizeof(tempBuffer), "%s/%s", g.projectPath, ".Magic/served-files");
+    HS_SetServedFilesRootDir(&g.hserver, "magic-app", tempBuffer);
+    HS_Set404File(&g.hserver, "magic-app", "/generated/app/pages/404.html");
 
-    snprintf(tempBuffer, sizeof(tempBuffer), "%s/%s", g.litPackageRootPath, "served-files");
-    HS_AddServedFilesDir(&g.hserver, "lit-app", "/Lit.jl", tempBuffer);
+    snprintf(tempBuffer, sizeof(tempBuffer), "%s/%s", g.magicPackageRootPath, "served-files");
+    HS_AddServedFilesDir(&g.hserver, "magic-app", "/Magic.jl", tempBuffer);
 
     if (g.verbose) {
-        HS_SetVHostVerbosity(&g.hserver, "lit-app", 1);
+        HS_SetVHostVerbosity(&g.hserver, "magic-app", 1);
     }
 
     if (g.devMode) {
-        HS_DisableFileCache(&g.hserver, "lit-app");
+        HS_DisableFileCache(&g.hserver, "magic-app");
     }
 
     if (g.docsPath) {
-        HS_AddServedFilesDir(&g.hserver, "lit-app", "/docs", g.docsPath);
+        HS_AddServedFilesDir(&g.hserver, "magic-app", "/docs", g.docsPath);
     }
 
-    if (HS_IsRegularFile(".Lit/companion-host.json")) {
-        HS_AddVHost(&g.hserver, "lit-companion");
-        HS_SetLWSVHostConfig(&g.hserver, "lit-companion", pt_serv_buf_size, HS_KILO_BYTES(12));
-        HS_SetLWSProtocolConfig(&g.hserver, "lit-companion", "HTTP", rx_buffer_size, HS_KILO_BYTES(12));
-        HS_InitFileServer(&g.hserver, "lit-companion", ".Lit/companion-host.json");
+    if (HS_IsRegularFile(".Magic/companion-host.json")) {
+        HS_AddVHost(&g.hserver, "magic-companion");
+        HS_SetLWSVHostConfig(&g.hserver, "magic-companion", pt_serv_buf_size, HS_KILO_BYTES(12));
+        HS_SetLWSProtocolConfig(&g.hserver, "magic-companion", "HTTP", rx_buffer_size, HS_KILO_BYTES(12));
+        HS_InitFileServer(&g.hserver, "magic-companion", ".Magic/companion-host.json");
         if (g.verbose) {
-            HS_SetVHostVerbosity(&g.hserver, "lit-companion", 1);
+            HS_SetVHostVerbosity(&g.hserver, "magic-companion", 1);
         }
     }
 
-    SG_RegisterHandler(SIGINT, LT_HandleSigInt, 0);
+    SG_RegisterHandler(SIGINT, MG_HandleSigInt, 0);
 
-    LT_StartIPC();
+    MG_StartIPC();
 
     HS_RunForever(&g.hserver, true);
     HS_Destroy(&g.hserver);
     return 0;
 }
 
-LT_API void LT_InitNetLayer(
+MG_API void MG_InitNetLayer(
     const char* hostName,
     int hostNameSize,
     int port,
     const char* docsPath,
     int docsPathSize,
     int ipcPort,
-    const char* litPackageRootPath,
-    int litPackageRootPathSize,
+    const char* magicPackageRootPath,
+    int magicPackageRootPathSize,
     bool verbose,
     bool devMode
 ) {
@@ -508,24 +508,24 @@ LT_API void LT_InitNetLayer(
     g.devMode = devMode;
     g.ipcPort = ipcPort;
 
-    strncpy(g.litPackageRootPath, litPackageRootPath, litPackageRootPathSize);
+    strncpy(g.magicPackageRootPath, magicPackageRootPath, magicPackageRootPathSize);
     getcwd(g.projectPath, sizeof(g.projectPath));
 
     pthread_mutex_init(&g.netEventsMutex, 0);
     pthread_mutex_init(&g.appEventsMutex, 0);
 
-    int result = pthread_create(&g.threadId, 0, LT_RunServer, 0);
+    int result = pthread_create(&g.threadId, 0, MG_RunServer, 0);
 }
 
-LT_API bool LT_ServerIsRunning() {
+MG_API bool MG_ServerIsRunning() {
     return g.hserver.isRunning;
 }
 
-LT_API int LT_DoServiceWork() {
+MG_API int MG_DoServiceWork() {
     return lws_service(g.hserver.lwsContext, 0);
 }
 
-LT_API void LT_StopServer() {
+MG_API void MG_StopServer() {
     lws_cancel_service(g.hserver.lwsContext);
     g.hserver.isRunning = false;
 }

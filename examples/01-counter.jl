@@ -1,8 +1,8 @@
-using Lit
+using Magic
 
 @page_startup begin
-    set_title("Counter | Lit.jl Demo")
-    set_description("Counter | Lit.jl Demo")
+    set_title("Counter | Magic.jl Demo")
+    set_description("Counter | Magic.jl Demo")
 end
 
 @session_startup begin

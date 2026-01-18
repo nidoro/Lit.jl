@@ -1,5 +1,5 @@
 ENV["GKSwstype"]="nul"
-using Lit
+using Magic
 using Shapefile
 using Plots
 using Colors
@@ -135,7 +135,7 @@ function ensure_shape_data()::Bool
     end
 
     mkpath("data")
-    url = "https://coisasdodavi.net/Lit/gadm41_BRA_shp.tar.gz"
+    url = "https://coisasdodavi.net/Magic/gadm41_BRA_shp.tar.gz"
 
     @info "Downloading Brazil shape data from $url..."
     temp_file = Downloads.download(url)
@@ -158,8 +158,8 @@ function ensure_shape_data()::Bool
 end
 
 @page_startup begin
-    set_title("Brazil Forecast | Lit.jl Demo")
-    set_description("Brazil Forecast | Lit.jl Demo")
+    set_title("Brazil Forecast | Magic.jl Demo")
+    set_description("Brazil Forecast | Magic.jl Demo")
     ensure_shape_data()
 end
 
@@ -179,7 +179,7 @@ session = get_session_data()
 
 h1("🇧🇷 Brazil")
 h2("Temperature Forecast")
-Lit.text("Double click a temperature below to change it")
+Magic.text("Double click a temperature below to change it")
 
 row() do
     column_config = Dict(

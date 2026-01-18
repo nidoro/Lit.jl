@@ -14,8 +14,8 @@ pushd $THIS_DIR/.. # Repo's root
 # Linux x86_64
 #----------------------------
 
-# Build liblit.so on Ubuntu 20.04 (LTS)
-docker run --rm -v "$PWD":/work lit-build:20.04 bash -c "./net-layer/build-linux-x86_64.sh"
+# Build libmagic.so on Ubuntu 20.04 (LTS)
+docker run --rm -v "$PWD":/work magic-build:20.04 bash -c "./net-layer/build-linux-x86_64.sh"
 
 ARTIFACTS_DIR=build/linux-x86_64/artifacts-linux-x86_64
 
@@ -43,7 +43,7 @@ os = \"linux\"
 arch = \"x86_64\"
 
     [[artifacts.download]]
-    url = \"https://github.com/nidoro/Lit.jl/releases/download/$VERSION_STRING/artifacts-linux-x86_64.tar.gz\"
+    url = \"https://github.com/nidoro/Magic.jl/releases/download/$VERSION_STRING/artifacts-linux-x86_64.tar.gz\"
     sha256 = \"$LINUX_X86_64_SHA256\"
 
 [[artifacts]]
@@ -52,7 +52,7 @@ os = \"windows\"
 arch = \"x86_64\"
 
     [[artifacts.download]]
-    url = \"https://github.com/nidoro/Lit.jl/releases/download/$VERSION_STRING/artifacts-win64.tar.gz\"
+    url = \"https://github.com/nidoro/Magic.jl/releases/download/$VERSION_STRING/artifacts-win64.tar.gz\"
     sha256 = \"$WIN64_SHA256\"
 " > Artifacts.toml
 

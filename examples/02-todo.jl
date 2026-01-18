@@ -1,4 +1,4 @@
-using Lit
+using Magic
 
 @once mutable struct Item
     name::String
@@ -25,8 +25,8 @@ function delete_all_checked()
 end
 
 @page_startup begin
-    set_title("To-Do List | Lit.jl Demo")
-    set_description("To-Do List | Lit.jl Demo")
+    set_title("To-Do List | Magic.jl Demo")
+    set_description("To-Do List | Magic.jl Demo")
 end
 
 @session_startup begin

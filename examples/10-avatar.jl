@@ -1,4 +1,4 @@
-using Lit
+using Magic
 using Random
 
 HAIR_OPTIONS      = ["bangs", "bowlCutHair", "braids", "bunHair", "curlyBob", "curlyShortHair", "froBun", "halfShavedHead", "mohawk", "shavedHead", "shortHair", "straightHair", "wavyBob"]
@@ -62,9 +62,9 @@ function generate_avatar_url()::String
 end
 
 @page_startup begin
-    set_title("Avatar Creator | Lit.jl Demo")
-    set_description("Avatar Creator using DiceBear | Lit.jl Demo")
-    add_font("Pacifico", ".Lit/served-files/fonts/Pacifico-Regular.ttf")
+    set_title("Avatar Creator | Magic.jl Demo")
+    set_description("Avatar Creator using DiceBear | Magic.jl Demo")
+    add_font("Pacifico", ".Magic/served-files/fonts/Pacifico-Regular.ttf")
     add_css_rule("""
         h1 {
             font-family: Pacifico;

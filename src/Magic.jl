@@ -1,4 +1,4 @@
-module Lit
+module Magic
 
 # Interface Elements
 #--------------------
@@ -134,8 +134,8 @@ end
 @with_kw mutable struct PageConfig
     id::String = ""
     uris::Vector{String} = Vector{String}()
-    title::String = "Lit App"
-    description::String = "Web app made with Lit.jl"
+    title::String = "Magic App"
+    description::String = "Web app made with Magic.jl"
     style::String = ""
     file_path::String = ""
     first_pass::Bool = true
@@ -241,12 +241,12 @@ macro once(def)
     struct_name = def.args[2]
 
     return esc(quote
-        if haskey(Lit.USER_TYPES, $(QuoteNode(struct_name)))
-            global $struct_name = Lit.USER_TYPES[$(QuoteNode(struct_name))]
+        if haskey(Magic.USER_TYPES, $(QuoteNode(struct_name)))
+            global $struct_name = Magic.USER_TYPES[$(QuoteNode(struct_name))]
         else
             $def
 
-            Lit.USER_TYPES[$(QuoteNode(struct_name))] = $struct_name
+            Magic.USER_TYPES[$(QuoteNode(struct_name))] = $struct_name
         end
     end)
 end
@@ -254,18 +254,18 @@ end
 function get_dyn_lib_path()::String
     if g.dev_mode
         if Sys.islinux()
-            return joinpath(@__DIR__, "../build/linux-x86_64/artifacts-linux-x86_64/liblit.so")
+            return joinpath(@__DIR__, "../build/linux-x86_64/artifacts-linux-x86_64/libmagic.so")
         elseif Sys.iswindows()
-            return joinpath(@__DIR__, "../build/win64/artifacts-win64/liblit.dll")
+            return joinpath(@__DIR__, "../build/win64/artifacts-win64/libmagic.dll")
         else
             @error "Unsupported OS: $(Sys.KERNEL) $(Sys.ARCH)"
         end
     else
         @static if isfile(joinpath(@__DIR__, "../Artifacts.toml"))
             if Sys.islinux()
-                return joinpath(artifact"artifacts", "liblit.so")
+                return joinpath(artifact"artifacts", "libmagic.so")
             elseif Sys.iswindows()
-                return joinpath(artifact"artifacts", "liblit.dll")
+                return joinpath(artifact"artifacts", "libmagic.dll")
             else
                 @error "Unsupported OS: $(Sys.KERNEL) $(Sys.ARCH)"
             end
@@ -276,8 +276,8 @@ end
 
 # Constants and Globals
 #--------------------------
-LIT_SO    = nothing
-LIBLIT    = nothing
+MAGIC_SO    = nothing
+LIBMAGIC    = nothing
 START_CWD = pwd()
 USER_TYPES= Dict{Symbol,DataType}()
 VERSION   = VersionNumber(TOML.parsefile(joinpath(@__DIR__, "..", "Project.toml"))["version"])
@@ -301,11 +301,11 @@ function top_container()::Dict
 end
 
 macro push(container)
-    :(Lit.push_container($(esc(container))))
+    :(Magic.push_container($(esc(container))))
 end
 
 macro pop()
-    :(Lit.pop_container())
+    :(Magic.pop_container())
 end
 
 function push_fragment(frag::Fragment)::Nothing
@@ -327,7 +327,7 @@ end
 function define_widget_func(interface, func_name)
     f = function(args...; kwargs...)
         push_container(interface)
-        value = getfield(Lit, func_name)(args...; kwargs...)
+        value = getfield(Magic, func_name)(args...; kwargs...)
         pop_container()
         return value
     end
@@ -352,7 +352,7 @@ end
 function define_page_config_func(page, func_name)
     f = function(args...; kwargs...)
         begin_page_config(page)
-        getfield(Lit, func_name)(page, args...; kwargs...)
+        getfield(Magic, func_name)(page, args...; kwargs...)
         end_page_config()
         return page
     end
@@ -415,7 +415,7 @@ end
 
 macro fragment(block)
     return :(
-        Lit.fragment(() -> $(esc(block)))
+        Magic.fragment(() -> $(esc(block)))
     )
 end
 
@@ -561,12 +561,12 @@ end
 # Layout
 #-------------
 function create_sidebar(initial_state::String, side::String, initial_width::String, position::String, labels::Tuple{Union{String, Nothing}, Union{String, Nothing}})::ContainerInterface
-    state_class = initial_state == "open" ? "lt-show" : ""
-    side_class = "lt-$(side)"
-    position_class = position == "slide-out" ? "lt-slide-out" : "lt-overlay"
+    state_class = initial_state == "open" ? "mg-show" : ""
+    side_class = "mg-$(side)"
+    position_class = position == "slide-out" ? "mg-slide-out" : "mg-overlay"
 
-    open_label = "<lt-icon lt-icon='material/arrow_forward_ios'></lt-icon>"
-    close_label = "<lt-icon lt-icon='material/arrow_back_ios'></lt-icon>"
+    open_label = "<mg-icon mg-icon='material/arrow_forward_ios'></mg-icon>"
+    close_label = "<mg-icon mg-icon='material/arrow_back_ios'></mg-icon>"
 
     if side == "right"
         open_label, close_label = close_label, open_label
@@ -578,12 +578,12 @@ function create_sidebar(initial_state::String, side::String, initial_width::Stri
     sidebar_wrapper = column(
         fill_height=true,
         max_height="100vh",
-        attributes=Dict("class" => "lt-sidebar $(side_class) $(state_class) $(position_class)", "data-lt-open-label" => open_label, "data-lt-close-label" => close_label),
+        attributes=Dict("class" => "mg-sidebar $(side_class) $(state_class) $(position_class)", "data-mg-open-label" => open_label, "data-mg-close-label" => close_label),
         css=Dict("--sidebar-width" => initial_width)
     )
-    sidebar_lining = sidebar_wrapper.column(fill_width=true, fill_height=true, attributes=Dict("class" => "lt-sidebar-lining"))
-    sidebar_lining.html("dd-button", "", attributes=Dict("onclick" => "LT_ToggleSidebar(event)", "class" => "lt-sidebar-toggle-button"))
-    sidebar = sidebar_lining.column(fill_width=true, fill_height=true, attributes=Dict("class" => "lt-sidebar-content"))
+    sidebar_lining = sidebar_wrapper.column(fill_width=true, fill_height=true, attributes=Dict("class" => "mg-sidebar-lining"))
+    sidebar_lining.html("dd-button", "", attributes=Dict("onclick" => "MG_ToggleSidebar(event)", "class" => "mg-sidebar-toggle-button"))
+    sidebar = sidebar_lining.column(fill_width=true, fill_height=true, attributes=Dict("class" => "mg-sidebar-content"))
     return sidebar
 end
 
@@ -1238,8 +1238,8 @@ function image(src_or_path::String; fill_width::Bool=false, max_width::String="1
     end
 
     src = src_or_path
-    if startswith(src_or_path, ".Lit/served-files")
-        src = replace(src_or_path, ".Lit/served-files" => "")
+    if startswith(src_or_path, ".Magic/served-files")
+        src = replace(src_or_path, ".Magic/served-files" => "")
     end
 
     return create_image(widgets, top_container(), src, width, height, css)
@@ -1253,9 +1253,9 @@ end
 function gen_resource_path(extension::String; lifetime::String="session")::String
     task = task_local_storage("app_task")
     file_name = "$(get_random_string(32)).$(replace(extension, "." => ""))"
-    dir_path = ".Lit/served-files/generated/session-$(task.client_id)"
+    dir_path = ".Magic/served-files/generated/session-$(task.client_id)"
     if lifetime == "app"
-        dir_path = ".Lit/served-files/generated/app"
+        dir_path = ".Magic/served-files/generated/app"
     end
     return "$(dir_path)/$(file_name)"
 end
@@ -1379,7 +1379,7 @@ end
 function link(label::String, url::String; style::String="secondary", fill_width=false, new_tab::Bool=false, css::Dict=Dict())::Nothing
     icon = ""
     if new_tab
-        icon = "<lt-icon lt-icon='material/open_in_new'></lt-icon>"
+        icon = "<mg-icon mg-icon='material/open_in_new'></mg-icon>"
     end
 
     combined_css = Dict("white-space" => "nowrap")
@@ -1387,7 +1387,7 @@ function link(label::String, url::String; style::String="secondary", fill_width=
 
     merge!(combined_css, css)
 
-    html("a", "$label$icon", css=combined_css, attributes=Dict("class" => "lt-link dd-button lt-button-style-$(style)", "href" => url, "target" => new_tab ? "_blank" : ""))
+    html("a", "$label$icon", css=combined_css, attributes=Dict("class" => "mg-link dd-button mg-button-style-$(style)", "href" => url, "target" => new_tab ? "_blank" : ""))
     return nothing
 end
 
@@ -1401,7 +1401,7 @@ function maybe_prepend_icon(text::String, icon::String, icon_color::String)::Str
         if length(icon_color) > 0
             style = "color: $icon_color"
         end
-        result = "<lt-icon lt-icon='$icon' style='$(style)'></lt-icon> $text"
+        result = "<mg-icon mg-icon='$icon' style='$(style)'></mg-icon> $text"
         return result
     end
     return text
@@ -1415,7 +1415,7 @@ h5(text::String; icon::String="", icon_color::String="", css=Dict()) = html("h5"
 h6(text::String; icon::String="", icon_color::String="", css=Dict()) = html("h6", maybe_prepend_icon(text, icon, icon_color), css=css)
 
 icon(icon::String; color::String="inherit", size::String="inherit", weight::String="inherit") =
-    html("lt-icon", "", attributes=Dict("lt-icon" => icon), css=Dict("color" => color, "font-size" => size, "font-weight" => "bold"))
+    html("mg-icon", "", attributes=Dict("mg-icon" => icon), css=Dict("color" => color, "font-size" => size, "font-weight" => "bold"))
 
 text(text::Any) = html("p", typeof(text) == String ? text : repr(text))
 
@@ -1490,7 +1490,7 @@ function metric(label::String, value::String, delta::String="", higher_is_better
 
         icon = startswith(delta, "-") ? "material/arrow_downward" : "material/arrow_upward"
 
-        iconHTML = "<lt-icon lt-icon='$icon' style='font-size: 1.1em; color: $color; background: $background'></lt-icon>"
+        iconHTML = "<mg-icon mg-icon='$icon' style='font-size: 1.1em; color: $color; background: $background'></mg-icon>"
         deltaHTML = "$iconHTML $delta"
     end
 
@@ -1647,7 +1647,7 @@ function add_font(page::PageConfig, font_name::String, src_or_path::String)::Not
     add_css_rule(page, """
         @font-face {
             font-family: "$(font_name)";
-            src: url($(strip_prefix(src_or_path, ".Lit/served-files")));
+            src: url($(strip_prefix(src_or_path, ".Magic/served-files")));
         }
     """)
     return nothing
@@ -1722,7 +1722,7 @@ function handle_new_client(client_id::Cint)::Nothing
 
     g.sessions[client_id] = session
 
-    mkpath(".Lit/served-files/generated/session-$(client_id)")
+    mkpath(".Magic/served-files/generated/session-$(client_id)")
 
     return nothing
 end
@@ -1730,22 +1730,22 @@ end
 function handle_client_left(client_id::Cint)::Nothing
     session = g.sessions[client_id]
     session.client_left = true
-    rm(".Lit/served-files/generated/session-$(client_id)", recursive=true, force=true)
+    rm(".Magic/served-files/generated/session-$(client_id)", recursive=true, force=true)
     delete!(g.sessions, client_id)
     return nothing
 end
 
 function create_page_html(page::PageConfig, output_path::String)::Nothing
-    template = read(joinpath(@__DIR__, "../served-files/LitPageTemplate.html"), String)
+    template = read(joinpath(@__DIR__, "../served-files/MagicPageTemplate.html"), String)
 
     title = length(page.title) > 0 ? page.title : g.base_page_config.title
     description = length(page.description) > 0 ? page.description : g.base_page_config.description
 
     page_html = replace(
         template,
-        "<title>Lit App</title>" => "<title>$(title)</title>",
-        "<meta property=\"og:description\" content=\"Web app made with Lit.jl\">" => "<meta property=\"og:description\" content=\"$(description)\">",
-        "<!-- LIT PAGE STYLE -->" => "<style>$(page.style)</style>"
+        "<title>Magic App</title>" => "<title>$(title)</title>",
+        "<meta property=\"og:description\" content=\"Web app made with Magic.jl\">" => "<meta property=\"og:description\" content=\"$(description)\">",
+        "<!-- MAGIC PAGE STYLE -->" => "<style>$(page.style)</style>"
     )
 
     write(output_path, page_html)
@@ -1754,15 +1754,15 @@ function create_page_html(page::PageConfig, output_path::String)::Nothing
 end
 
 function create_404_html(output_path::String)::Nothing
-    template = read(joinpath(@__DIR__, "../served-files/Lit404Template.html"), String)
+    template = read(joinpath(@__DIR__, "../served-files/Magic404Template.html"), String)
 
     title = g.base_page_config.title
     description = g.base_page_config.description
 
     page_html = replace(
         template,
-        "<title>Lit App</title>" => "<title>$(title)</title>",
-        "<meta property=\"og:description\" content=\"Web app made with Lit.jl\">" => "<meta property=\"og:description\" content=\"$(description)\">",
+        "<title>Magic App</title>" => "<title>$(title)</title>",
+        "<meta property=\"og:description\" content=\"Web app made with Magic.jl\">" => "<meta property=\"og:description\" content=\"$(description)\">",
     )
 
     write(output_path, page_html)
@@ -1770,11 +1770,11 @@ function create_404_html(output_path::String)::Nothing
 end
 
 function run_user_script()::Nothing
-    app_mod = Module(:LitApp)
+    app_mod = Module(:MagicApp)
     Core.eval(app_mod, quote
         using Base
         using Core
-        const include = path -> Base.include(LitApp, path)
+        const include = path -> Base.include(MagicApp, path)
     end)
     Base.include(app_mod, g.script_path)
     return nothing
@@ -1921,7 +1921,8 @@ function rerun(client_id::Cint, payload::Dict)::Task
     catch e
         if !task.session.client_left
             bt = catch_backtrace()
-            frames = filtered_stacktrace(bt; cutoff_file = "LitUserSpace.jl")
+            # TODO: Update cut-off point!
+            frames = filtered_stacktrace(bt; cutoff_file = "MagicUserSpace.jl")
             err_message = remove_lines_starting_with(sprint(showerror, e), "in expression starting")
             st = sprint(Base.show_backtrace, frames)
 
@@ -1963,7 +1964,7 @@ end
 
 macro app_startup(block)
     return :(
-        if Lit.is_app_first_pass()
+        if Magic.is_app_first_pass()
             $(esc(block))
         end
     )
@@ -1971,7 +1972,7 @@ end
 
 macro session_startup(block)
     return :(
-        if Lit.is_session_first_pass()
+        if Magic.is_session_first_pass()
             $(esc(block))
         end
     )
@@ -1979,10 +1980,10 @@ end
 
 macro page_startup(block)
     return :(
-        if Lit.is_page_first_pass()
-            Lit.begin_page_config(get_page(get_url_path()))
+        if Magic.is_page_first_pass()
+            Magic.begin_page_config(get_page(get_url_path()))
             $(esc(block))
-            Lit.end_page_config()
+            Magic.end_page_config()
         end
     )
 end
@@ -2002,31 +2003,31 @@ function is_on_page(page_path::String)::Bool
 end
 
 function lock_client(client_id::Cint)::Nothing
-    ccall((:LT_LockClient, LIT_SO), Cvoid, (Cint,), client_id)
+    ccall((:MG_LockClient, MAGIC_SO), Cvoid, (Cint,), client_id)
     return nothing
 end
 
 function unlock_client(client_id::Cint)::Nothing
-    ccall((:LT_UnlockClient, LIT_SO), Cvoid, (Cint,), client_id)
+    ccall((:MG_UnlockClient, MAGIC_SO), Cvoid, (Cint,), client_id)
     return nothing
 end
 
 function pop_net_event()::NetEvent
-    return ccall((:LT_PopNetEvent, LIT_SO), NetEvent, ())
+    return ccall((:MG_PopNetEvent, MAGIC_SO), NetEvent, ())
 end
 
 function push_app_event(app_event::AppEvent)::Nothing
-    ccall((:LT_PushAppEvent, LIT_SO), Cvoid, (AppEvent,), app_event)
+    ccall((:MG_PushAppEvent, MAGIC_SO), Cvoid, (AppEvent,), app_event)
     return nothing
 end
 
 function push_uri_mapping(uri::String, resource_path::String)::Nothing
-    ccall((:LT_PushURIMapping, LIT_SO), Cvoid, (Cstring, Cint, Cstring, Cint), uri, Cint(sizeof(uri)), resource_path, Cint(sizeof(resource_path)))
+    ccall((:MG_PushURIMapping, MAGIC_SO), Cvoid, (Cstring, Cint, Cstring, Cint), uri, Cint(sizeof(uri)), resource_path, Cint(sizeof(resource_path)))
     return nothing
 end
 
 function clear_uri_mapping()::Nothing
-    ccall((:LT_ClearURIMapping, LIT_SO), Cvoid, ())
+    ccall((:MG_ClearURIMapping, MAGIC_SO), Cvoid, ())
     return nothing
 end
 
@@ -2103,21 +2104,21 @@ function start_app(
     g.dev_mode = dev_mode
 
     if g.dev_mode
-        @warn "Starting Lit.jl on dev mode"
+        @warn "Starting Magic.jl on dev mode"
     end
 
-    global LIT_SO = get_dyn_lib_path()
-    global LIBLIT = Libdl.dlopen(LIT_SO, Libdl.RTLD_NOW)
+    global MAGIC_SO = get_dyn_lib_path()
+    global LIBMAGIC = Libdl.dlopen(MAGIC_SO, Libdl.RTLD_NOW)
     g.sessions = Dict{Ptr{Cvoid}, Session}()
     g.first_pass = true
     g.initialized = true
     g.script_path = joinpath(START_CWD, script_path)
 
-    rm(".Lit/served-files/generated", recursive=true, force=true)
-    mkpath(".Lit/served-files/generated/app/pages")
+    rm(".Magic/served-files/generated", recursive=true, force=true)
+    mkpath(".Magic/served-files/generated/app/pages")
 
-    g.base_page_config.title = "Lit App"
-    g.base_page_config.description = "Web app made with Lit.jl"
+    g.base_page_config.title = "Magic App"
+    g.base_page_config.description = "Web app made with Magic.jl"
 
     # Dry run to try and initialize the app
     #-------------------------------------------
@@ -2134,7 +2135,7 @@ function start_app(
     )
 
     handle_new_client(Cint(0))
-    add_page("/", title="Lit App", description="Lit App")
+    add_page("/", title="Magic App", description="Magic App")
 
     @info "Dry Run: First pass over '$(script_path)'.\n$(AC_Green("@app_startup")) code blocks will run now."
     wait(rerun(Cint(0), dry_run_payload))
@@ -2181,15 +2182,15 @@ function start_app(
     g.ipc_connection = accept(ipc_server)
     @info "NetLayerStarted\nNow serving at http://$(host_name):$(port)"
 
-    cp(joinpath(@__DIR__, "../served-files/LitPageTemplate.html"), ".Lit/served-files/generated/app/pages/first.html", force=true)
+    cp(joinpath(@__DIR__, "../served-files/MagicPageTemplate.html"), ".Magic/served-files/generated/app/pages/first.html", force=true)
     push_uri_mapping("/", "/generated/app/pages/first.html")
 
     # Configure pages after dry runs
     #---------------------
-    create_page_html(g.base_page_config, ".Lit/served-files/generated/app/pages/base.html")
+    create_page_html(g.base_page_config, ".Magic/served-files/generated/app/pages/base.html")
 
     for page in g.pages
-        create_page_html(page, ".Lit/served-files/generated/app/pages/$(page.id).html")
+        create_page_html(page, ".Magic/served-files/generated/app/pages/$(page.id).html")
     end
 
     clear_uri_mapping()
@@ -2198,16 +2199,16 @@ function start_app(
         # User explicitly configured app pages
         for page in g.pages
             for uri in page.uris
-                push_uri_mapping(uri, replace(page.file_path, ".Lit/served-files" => ""))
+                push_uri_mapping(uri, replace(page.file_path, ".Magic/served-files" => ""))
             end
         end
     else
-        push_uri_mapping("/", replace(g.base_page_config.file_path, ".Lit/served-files" => ""))
+        push_uri_mapping("/", replace(g.base_page_config.file_path, ".Magic/served-files" => ""))
     end
 
     # Create 404.html
     #-------------------
-    create_404_html(".Lit/served-files/generated/app/pages/404.html")
+    create_404_html(".Magic/served-files/generated/app/pages/404.html")
 
     # Net-layer IPC listener loop.
     # When a net-layer event happens, it forwards the event to the App-layer
@@ -2321,7 +2322,7 @@ function start_app(
                         end
                     else
                         @debug "ClientlessTaskFinished $(ev.data.client_id)"
-                        rm(".Lit/served-files/generated/session-$(session.client_id)", recursive=true, force=true)
+                        rm(".Magic/served-files/generated/session-$(session.client_id)", recursive=true, force=true)
                     end
                 end
             end
@@ -2330,23 +2331,23 @@ function start_app(
         e isa InterruptException || rethrow()
     end
 
-    Libdl.dlclose(LIBLIT)
+    Libdl.dlclose(LIBMAGIC)
 
     @info "ServerLoopStopped"
     return nothing
 end
 
 function create_app_event(event_type::AppEventType, client_id::Cint, payload::String)::AppEvent
-    return ccall((:LT_CreateAppEvent, LIT_SO), AppEvent, (AppEventType, Cint, Ptr{Cchar}, Cint), event_type, client_id, payload, Cint(sizeof(payload)))
+    return ccall((:MG_CreateAppEvent, MAGIC_SO), AppEvent, (AppEventType, Cint, Ptr{Cchar}, Cint), event_type, client_id, payload, Cint(sizeof(payload)))
 end
 
 function destroy_net_event(ev::NetEvent)::Nothing
-    ccall((:LT_DestroyNetEvent, LIT_SO), Cvoid, (NetEvent,), ev)
+    ccall((:MG_DestroyNetEvent, MAGIC_SO), Cvoid, (NetEvent,), ev)
 end
 
 function init_net_layer(host_name::String, port::Int, docs_path::String, ipc_port::Int, package_root_dir::String, verbose::Bool, dev_mode::Bool)
     ccall(
-        (:LT_InitNetLayer, LIT_SO),
+        (:MG_InitNetLayer, MAGIC_SO),
         Cvoid,
         (Cstring, Cint, Cint, Cstring, Cint, Cint, Cstring, Cint, Cint, Cint),
         host_name, Cint(sizeof(host_name)), port, docs_path, Cint(sizeof(docs_path)), Cint(ipc_port), package_root_dir, Cint(sizeof(package_root_dir)), Cint(verbose), Cint(dev_mode)
@@ -2354,15 +2355,15 @@ function init_net_layer(host_name::String, port::Int, docs_path::String, ipc_por
 end
 
 function server_is_running()::Bool
-    return ccall((:LT_ServerIsRunning, LIT_SO), Cint, ())
+    return ccall((:MG_ServerIsRunning, MAGIC_SO), Cint, ())
 end
 
 function do_service_work()::Int
-    return ccall((:LT_DoServiceWork, LIT_SO), Cint, ())
+    return ccall((:MG_DoServiceWork, MAGIC_SO), Cint, ())
 end
 
 function stop_server()
-    return ccall((:LT_StopServer, LIT_SO), Cvoid, ())
+    return ccall((:MG_StopServer, MAGIC_SO), Cvoid, ())
 end
 
 #---------------------------------
@@ -2371,7 +2372,7 @@ function __init__()
     # Check if the host system is supported.
     if !((Sys.islinux() && Sys.ARCH === :x86_64) || (Sys.iswindows() && Sys.ARCH === :x86_64))
         printstyled("Error: ", color=:red, bold=true)
-        println("Currently, Lit.jl is only supported on Windows and Linux x86_64.")
+        println("Currently, Magic.jl is only supported on Windows and Linux x86_64.")
         println("       Your platform: $(Sys.KERNEL) $(Sys.ARCH).")
     end
 end
@@ -2396,7 +2397,7 @@ function main(args::Vector{String})
             default = 3443
 
         "--docs", "-d"
-            help = "Serve Lit.jl documentation at /docs/build/"
+            help = "Serve Magic.jl documentation at /docs/build/"
             action = :store_true
 
         "--dev", "-D"

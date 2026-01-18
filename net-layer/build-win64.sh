@@ -14,7 +14,7 @@ x86_64-w64-mingw32-gcc \
     -Wno-unused-result \
     -shared \
     -fPIC \
-    -o ../build/win64/artifacts-win64/liblit.dll \
+    -o ../build/win64/artifacts-win64/libmagic.dll \
     \
         -I../build/win64/openssl-OpenSSL_1_1_1t/include \
         -I../build/win64/libwebsockets-4.3.2/include \
@@ -41,9 +41,8 @@ x86_64-w64-mingw32-gcc \
         -l:libsqlite3.a \
     -Wl,--end-group \
     \
-    src/Lit.cpp \
+    src/Magic.cpp \
     -Wl,-Bstatic -lstdc++ -lwinpthread \
     -Wl,-Bdynamic -lcrypt32 -lws2_32
-
 
 popd

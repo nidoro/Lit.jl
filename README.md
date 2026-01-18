@@ -1,11 +1,11 @@
 <p align="center">
-  <img src="served-files/images/lit-logo-and-text.svg" alt="Logo" height="100"><br/>
+  <img src="served-files/images/magic-logo-and-text.svg" alt="Logo" height="100"><br/>
   <span>A new way of creating Julia web apps!</span>
 </p>
 
 ---
 
-Made for scientists and researchers, `Lit.jl` is a web app framework for Julia
+Made for scientists and researchers, `Magic.jl` is a web app framework for Julia
 that makes it easy for you to build awesome interactable web pages in no time!
 
 ## 🔥 Features
@@ -14,7 +14,7 @@ that makes it easy for you to build awesome interactable web pages in no time!
 you to have to learn new obscure macros.
 - **Fast, ergonomic development**: Our API enables fast development iteration
 cycles.
-- **No front-end experience required**: Lit is designed for people with no
+- **No front-end experience required**: Magic is designed for people with no
 web development experience.
 - **Data-centric web apps**: We aim to support the development of any data
 science web app.
@@ -28,23 +28,23 @@ science web app.
 
 ## 🎓 Documentation
 
-- [Getting Started](https://lit.coisasdodavi.net/docs/build/docs/getting-started/install)
-- [Demo Web Apps](https://lit.coisasdodavi.net/)
-- [API Reference](https://lit.coisasdodavi.net/docs/build/docs/category/api-reference)
+- [Getting Started](https://magic.coisasdodavi.net/docs/build/docs/getting-started/install)
+- [Demo Web Apps](https://magic.coisasdodavi.net/)
+- [API Reference](https://magic.coisasdodavi.net/docs/build/docs/category/api-reference)
 
 ## —͟͟͞͞★ Quick start
 
 ### 1. Install:
 
 ```bash
-$ julia -e 'using Pkg; Pkg.add(url="https://github.com/nidoro/Lit.jl")'
+$ julia -e 'using Pkg; Pkg.add(url="https://github.com/nidoro/Magic.jl")'
 ```
 
 ### 2. Implement `app.jl`:
 
 ```julia
 # app.jl
-using Lit
+using Magic
 if button("Click me")
     text("Button Clicked!")
 end
@@ -55,14 +55,14 @@ end
 From REPL (recommended for faster app restart during development):
 
 ```julia
-> using Lit
+> using Magic
 > start_app()
 ```
 
 Or from the terminal (requires Julia 1.12):
 
 ```bash
-$ julia -m Lit
+$ julia -m Magic
 ```
 
 ### 4. Open the app in your browser
@@ -71,11 +71,11 @@ The default address is http://localhost:3443
 
 ## 💡 Philosophy
 
-Inspired by the popular [Streamlit](https://streamlit.io/) Python package, Lit
+Inspired by the popular [Streamlit](https://streamlit.io/) Python package, Magic
 is the data-centric web app framework that we wanted in julia. Since we didn't
 find any package with the features we were looking for, we created our own.
 
-The core idea is simple: a Lit web app is a regular julia script that runs
+The core idea is simple: a Magic web app is a regular julia script that runs
 from top to bottom every time an interaction happens. This idea is simple enough
 for any julia programmer to understand and powerful enough to enable them to
 get an web app up and running in no time.
@@ -103,15 +103,15 @@ but we can't promise that. So we are not adhering to
 [Semantic Versioning](https://semver.org/) just yet, although we intend to on
 version `1.0` forward. Public API breaking changes can be found in
 `CHANGELOG.txt`.
-- **Collaboration**: You can collaborate for with Lit's development by using it,
+- **Collaboration**: You can collaborate for with Magic's development by using it,
 testing it and giving your feedback on
-[issues](https://github.com/nidoro/Lit.jl/issues). But at this point in time,
+[issues](https://github.com/nidoro/Magic.jl/issues). But at this point in time,
 when the design of the package is still taking shape and form, we think it is
 best that its development stays centralized on us. In the future we will open
 for code collaboration.
-- **Security and Resilience**: While we believe that Lit has no major
+- **Security and Resilience**: While we believe that Magic has no major
 vulnerability since the first public release, tests are still being implemented
-to ensure that. Meanwhile, our advice is that you don't host your Lit web app
+to ensure that. Meanwhile, our advice is that you don't host your Magic web app
 along with sensitive data and don't use it for anything safety-critical. If you
 want to be extra safe, you can run it inside a sandbox like
 [NSJail](https://github.com/google/nsjail).

@@ -1,4 +1,4 @@
-using Lit
+using Magic
 
 mutable struct SessionData
     app_reruns::Int

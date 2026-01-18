@@ -1,4 +1,4 @@
-using Lit
+using Magic
 using Statistics
 using Dates
 using DataFrames
@@ -13,8 +13,8 @@ mutable struct PageData
 end
 
 @page_startup begin
-    set_title("Seattle Weather | Lit.jl Demo")
-    set_description("Seattle Weather | Lit.jl Demo")
+    set_title("Seattle Weather | Magic.jl Demo")
+    set_description("Seattle Weather | Magic.jl Demo")
 
     full_df = DataFrame(dataset("seattle-weather"))
     full_df.date = Date.(full_df.date)

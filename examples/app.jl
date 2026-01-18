@@ -1,4 +1,4 @@
-using Lit
+using Magic
 
 @app_startup begin
     add_page("/")
@@ -45,19 +45,19 @@ set_page_layout(
 
 if is_on_page("/")
     @page_startup begin
-        set_title("Lit Demo Apps | Lit.jl")
-        set_description("Lit Demo Apps | Lit.jl")
+        set_title("Magic Demo Apps | Magic.jl")
+        set_description("Magic Demo Apps | Magic.jl")
     end
 
     column(fill_width=true, align_items="center") do
         row(align_items="center") do
-            image("/Lit.jl/images/lit-logo.svg", css=Dict("max-height" => "70px"))
-            h1("Lit.jl Demo Apps")
+            image("/Magic.jl/images/magic-logo.svg", css=Dict("max-height" => "70px"))
+            h1("Magic.jl Demo Apps")
         end
 
         space(height="1rem")
 
-        text("A few simple apps that showcase Lit.jl features!")
+        text("A few simple apps that showcase Magic.jl features!")
         text("Each one contains its own source code for you to explore.")
 
         cols = columns(2, show_border=true, padding=".8rem", justify_content="space-between")
@@ -103,7 +103,7 @@ if is_on_page("/")
         row(css=Dict("opacity" => "0.6")) do
             link("Getting Started", "/docs/build/docs/getting-started/install", style="naked", new_tab=true)
             link("API Reference", "/docs/build/docs/category/api-reference", style="naked", new_tab=true)
-            link("GitHub", "https://github.com/nidoro/Lit.jl", style="naked", new_tab=true)
+            link("GitHub", "https://github.com/nidoro/Magic.jl", style="naked", new_tab=true)
         end
     end
 else
@@ -113,7 +113,7 @@ end
 left_sidebar() do
     column(fill_width=true, gap="0px") do
         space(height="3rem")
-        h5("Lit.jl Demo Apps", css=Dict("margin" => "0 0 .8rem .8rem", "white-space" => "nowrap", "color" => "#444"))
+        h5("Magic.jl Demo Apps", css=Dict("margin" => "0 0 .8rem .8rem", "white-space" => "nowrap", "color" => "#444"))
         link("Overview", "/", style="naked", fill_width=true, css=Dict("justify-content" => "flex-start"))
         link("Counter", "/counter", style="naked", fill_width=true, css=Dict("justify-content" => "flex-start"))
         link("To-Do List", "/todo", style="naked", fill_width=true, css=Dict("justify-content" => "flex-start"))

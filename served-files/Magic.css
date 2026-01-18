@@ -3,7 +3,7 @@
 /* FONTS */
 @font-face {
     font-family: "Outfit";
-    src: url(/Lit.jl/fonts/Outfit-VariableFont_wght.ttf) format("truetype");
+    src: url(/Magic.jl/fonts/Outfit-VariableFont_wght.ttf) format("truetype");
 
     font-style: bold;
     font-weight: bold;
@@ -12,7 +12,7 @@
 
 @font-face {
     font-family: "Outfit";
-    src: url(/Lit.jl/fonts/Outfit-VariableFont_wght.ttf) format("truetype");
+    src: url(/Magic.jl/fonts/Outfit-VariableFont_wght.ttf) format("truetype");
 
     font-style: normal;
     font-weight: normal;
@@ -21,12 +21,12 @@
 
 @font-face {
     font-family: "Ubuntu";
-    src: url(/Lit.jl/fonts/Ubuntu-Regular.ttf) format("truetype");
+    src: url(/Magic.jl/fonts/Ubuntu-Regular.ttf) format("truetype");
 }
 
 @font-face {
     font-family: "MaterialSymbolsOutlined";
-    src: url("/Lit.jl/fonts/MaterialSymbolsOutlined[FILL,GRAD,opsz,wght].ttf") format("truetype");
+    src: url("/Magic.jl/fonts/MaterialSymbolsOutlined[FILL,GRAD,opsz,wght].ttf") format("truetype");
 }
 
 :root {
@@ -127,7 +127,7 @@ h6 { font-size: 1rem;    }
 
 :focus { outline: none }
 
-i.lt-material-icon {
+i.mg-material-icon {
     font-family: "MaterialSymbolsOutlined";
 }
 
@@ -164,7 +164,7 @@ input[type="color"]::-webkit-color-swatch {
 /* ICON */
 /* ICON */
 
-lt-icon {
+mg-icon {
     font-family: "MaterialSymbolsOutlined";
     font-style: normal;
     line-height: 1;
@@ -174,7 +174,7 @@ lt-icon {
 /* IMAGE */
 /* IMAGE */
 
-img.lt-image {
+img.mg-image {
     max-width: 100%;
 }
 
@@ -182,11 +182,11 @@ img.lt-image {
 /* TABULATOR JS */
 /* TABULATOR JS */
 
-.lt-dataframe {
+.mg-dataframe {
     max-width: 100%;
 }
 
-.lt-dataframe-lining {
+.mg-dataframe-lining {
 
 }
 
@@ -244,7 +244,7 @@ img.lt-image {
 /* SELECTBOX */
 /* SELECTBOX */
 
-dd-input.lt-selectbox {
+dd-input.mg-selectbox {
     border-radius: .5rem;
     overflow: hidden;
     --input-after-font-size: .8rem;
@@ -252,17 +252,17 @@ dd-input.lt-selectbox {
     padding: 5px 8px;
 }
 
-dd-input.lt-selectbox .dd-input-container {
+dd-input.mg-selectbox .dd-input-container {
     row-gap: 6px;
 }
 
-dd-input.lt-selectbox input {
+dd-input.mg-selectbox input {
     flex-grow: 1;
     padding: 4px 0 4px 0;
     overflow: hidden;
 }
 
-dd-input.lt-selectbox .dd-clear-button {
+dd-input.mg-selectbox .dd-clear-button {
     --button-bg: #999;
     --button-color: white;
     --button-font-size: 10px;
@@ -274,7 +274,7 @@ dd-input.lt-selectbox .dd-clear-button {
     aspect-ratio: 1 / 1;
 }
 
-dd-input.lt-selectbox dd-selected-option {
+dd-input.mg-selectbox dd-selected-option {
     border-radius: 0.25rem;
     background: var(--primary);
     color: white;
@@ -287,7 +287,7 @@ dd-input.lt-selectbox dd-selected-option {
     --button-font-size: 1.2em;
 }
 
-dd-select.lt-selectbox {
+dd-select.mg-selectbox {
     background: white;
     border-radius: .5rem;
     border: 1px solid #f6f6f6;
@@ -301,7 +301,7 @@ dd-select.lt-selectbox {
 /* INPUT */
 /* INPUT */
 
-dd-input.lt-text-input {
+dd-input.mg-text-input {
     border-radius: .5rem;
     overflow: hidden;
     padding: 5px 8px;
@@ -313,7 +313,7 @@ dd-input.lt-text-input {
 /* BUTTON */
 /* BUTTON */
 
-dd-button.lt-button, a.lt-link {
+dd-button.mg-button, a.mg-link {
     --button-border-width: 1px;
     --button-border-color: #d0d0d0;
     --button-padding: 9.5px 14px;
@@ -321,37 +321,37 @@ dd-button.lt-button, a.lt-link {
     --button-hover-bg: #f0f0f0;
 }
 
-.lt-button.lt-button-style-primary, .lt-link.lt-button-style-primary {
+.mg-button.mg-button-style-primary, .mg-link.mg-button-style-primary {
     --button-bg: var(--primary);
     --button-color: white;
     --button-border-color: var(--primary);
     --button-hover-bg: hsl(var(--primary-hs), 30%);
 }
 
-.lt-button.lt-button-style-naked, .lt-link.lt-button-style-naked {
+.mg-button.mg-button-style-naked, .mg-link.mg-button-style-naked {
     --button-border-color: transparent;
 }
 
-.lt-button lt-icon, .lt-link lt-icon {
+.mg-button mg-icon, .mg-link mg-icon {
     font-size: 1.2em;
     line-height: 0.85;
 }
 
-.lt-button .lt-material-icon, .lt-link .lt-material-icon {
+.mg-button .mg-material-icon, .mg-link .mg-material-icon {
     font-style: normal;
     font-size: 1.2em;
     line-height: 0.85;
 }
 
-#lt_app_wrapper {
+#mg_app_wrapper {
     height: 100%;
 }
 
-.lt_fragment_container[data-lt-fragment-id=""] {
+.mg_fragment_container[data-mg-fragment-id=""] {
     height: 100%;
 }
 
-.lt_fragment_container > * {
+.mg_fragment_container > * {
     transition: opacity var(--transition-duration, 0.8s) ease-in-out;
     opacity: var(--opacity, 1);
 }
@@ -374,7 +374,7 @@ dd-button.lt-button, a.lt-link {
 /* SIDEBAR */
 /* SIDEBAR */
 
-.lt-sidebar {
+.mg-sidebar {
     --sidebar-width: 300px;
     --max-width: 0px;
     background: #f0f0f0;
@@ -386,39 +386,39 @@ dd-button.lt-button, a.lt-link {
     height: 100vh;
 }
 
-.lt-sidebar.lt-right {
+.mg-sidebar.mg-right {
     right: 0;
 }
 
-.lt-sidebar.lt-overlay {
+.mg-sidebar.mg-overlay {
     position: absolute;
 }
 
-.lt-sidebar-lining {
+.mg-sidebar-lining {
     position: relative;
     height: 100%;
 }
 
-.lt-sidebar-content {
+.mg-sidebar-content {
     height: 100%;
     overflow-x: hidden;
     overflow-y: auto;
 }
 
-.lt-sidebar.lt-show {
+.mg-sidebar.mg-show {
     --max-width: var(--sidebar-width);
 }
 
-.lt-sidebar.lt-show.lt-overlay {
+.mg-sidebar.mg-show.mg-overlay {
     -webkit-box-shadow: 0px 0px 19px -8px #000000;
     box-shadow: 0px 0px 19px -8px #000000;
 }
 
-.lt-sidebar.lt-show .lt-sidebar-toggle-button {
+.mg-sidebar.mg-show .mg-sidebar-toggle-button {
     background: #f0f0f0;
 }
 
-.lt-sidebar-toggle-button {
+.mg-sidebar-toggle-button {
     position: absolute;
     width: max-content;
     z-index: 200;
@@ -429,17 +429,17 @@ dd-button.lt-button, a.lt-link {
     --button-hover-color: #555;
 }
 
-.lt-sidebar-toggle-button lt-icon {
+.mg-sidebar-toggle-button mg-icon {
     font-weight: bold;
 }
 
-.lt-sidebar.lt-left .lt-sidebar-toggle-button {
+.mg-sidebar.mg-left .mg-sidebar-toggle-button {
     right: 0;
     transform: translateX(100%);
     border-radius: 0 .5em .5em 0;
 }
 
-.lt-sidebar.lt-right .lt-sidebar-toggle-button {
+.mg-sidebar.mg-right .mg-sidebar-toggle-button {
     left: 0;
     transform: translateX(-100%);
     border-radius: .5em 0 0 .5em;

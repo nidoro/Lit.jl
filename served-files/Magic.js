@@ -1,11 +1,11 @@
 
-class LT_Icon extends HTMLElement {
+class MG_Icon extends HTMLElement {
     constructor() {
         super();
     }
 
     connectedCallback() {
-        const iconId = this.getAttribute("lt-icon");
+        const iconId = this.getAttribute("mg-icon");
         const iconName = iconId.split("/")[1];
         if (iconName in g.materialIcons) {
             this.innerHTML = `&#x${g.materialIcons[iconName]};`;
@@ -33,7 +33,7 @@ function getLocation() {
 function requestUpdate(events) {
     if (events.length) {
         const fragmentId = events[0].fragment_id;
-        const fragChildren = document.querySelectorAll(`.lt_fragment_container[data-lt-fragment-id="${fragmentId}"] > *`);
+        const fragChildren = document.querySelectorAll(`.mg_fragment_container[data-mg-fragment-id="${fragmentId}"] > *`);
         for (const child of fragChildren) {
             child.style.setProperty("--opacity", 0.5);
             child.style.setProperty("--transition-duration", "0.8s");
@@ -57,8 +57,8 @@ function ackInvalidState() {
 function btnClick(event) {
     requestUpdate([{
         type: "click",
-        widget_id: event.currentTarget.getAttribute("data-lt-id"),
-        fragment_id: event.currentTarget.getAttribute("data-lt-fragment-id"),
+        widget_id: event.currentTarget.getAttribute("data-mg-id"),
+        fragment_id: event.currentTarget.getAttribute("data-mg-fragment-id"),
     }]);
 }
 
@@ -71,8 +71,8 @@ function mslChange(oldValue, newValue, elem) {
 
     requestUpdate([{
         type: "change",
-        widget_id: elem.getAttribute("data-lt-id"),
-        fragment_id: elem.getAttribute("data-lt-fragment-id"),
+        widget_id: elem.getAttribute("data-mg-id"),
+        fragment_id: elem.getAttribute("data-mg-fragment-id"),
         old_value: oldValue,
         new_value: newValue,
     }]);
@@ -86,7 +86,7 @@ function cbxAnyChange(groupName) {
     }
 
     const group = DD_Checkbox.getGroup(groupName);
-    const fragmentId = group.checkboxes[0].getAttribute("data-lt-fragment-id");
+    const fragmentId = group.checkboxes[0].getAttribute("data-mg-fragment-id");
 
     requestUpdate([{
         type: "change",
@@ -98,7 +98,7 @@ function cbxAnyChange(groupName) {
 
 function radChange(groupName) {
     const group = DD_Radio.getGroup(groupName);
-    const fragmentId = group.checkboxes[0].getAttribute("data-lt-fragment-id");
+    const fragmentId = group.checkboxes[0].getAttribute("data-mg-fragment-id");
 
     requestUpdate([{
         type: "change",
@@ -113,23 +113,23 @@ function isNumber(value) {
 }
 
 function sendDFChanges(table) {
-    if (table.lt_queued_changes.length == 0) return;
+    if (table.mg_queued_changes.length == 0) return;
 
     const tableElem = table.element;
 
     requestUpdate([{
         type: "change",
-        widget_id: tableElem.getAttribute("data-lt-id"),
-        fragment_id: tableElem.getAttribute("data-lt-fragment-id"),
-        changes: table.lt_queued_changes,
+        widget_id: tableElem.getAttribute("data-mg-id"),
+        fragment_id: tableElem.getAttribute("data-mg-fragment-id"),
+        changes: table.mg_queued_changes,
     }]);
 
-    table.lt_queued_changes = [];
+    table.mg_queued_changes = [];
 }
 
 function dfChange(cell) {
-    if ("ltIgnoreNextChange" in cell && cell.ltIgnoreNextChange) {
-        cell.ltIgnoreNextChange = false;
+    if ("mgIgnoreNextChange" in cell && cell.mgIgnoreNextChange) {
+        cell.mgIgnoreNextChange = false;
         return;
     }
 
@@ -139,11 +139,11 @@ function dfChange(cell) {
     let newValue = cell.getValue();
 
     const rowData = cell.getRow().getData();
-    const rowIndex = rowData.lt_original_index;
+    const rowIndex = rowData.mg_original_index;
     const columnName = cell.getField();
     const tableElem = table.element;
 
-    const columnConfig = table.lt_column_config[columnName];
+    const columnConfig = table.mg_column_config[columnName];
     const columnType = columnConfig.type;
     const juliaType = columnConfig.julia_type;
 
@@ -154,7 +154,7 @@ function dfChange(cell) {
     if (columnType == "Number") {
         if (["", undefined, null].includes(newValue)) {
             if (columnConfig.required) {
-                cell.ltIgnoreNextChange = true;
+                cell.mgIgnoreNextChange = true;
                 cell.setValue(oldValue);
                 ignore_changes = true;
                 newValue = oldValue;
@@ -164,7 +164,7 @@ function dfChange(cell) {
         } else if (isNumber(newValue)) {
             newValue = Number(newValue);
         } else if (columnConfig.required) {
-            cell.ltIgnoreNextChange = true;
+            cell.mgIgnoreNextChange = true;
             cell.setValue(oldValue);
             ignore_changes = true;
             newValue = oldValue;
@@ -175,7 +175,7 @@ function dfChange(cell) {
     } else if (columnType == "String") {
         if ([undefined, null].includes(newValue)) {
             if (columnConfig.required) {
-                cell.ltIgnoreNextChange = true;
+                cell.mgIgnoreNextChange = true;
                 cell.setValue(oldValue);
                 ignore_changes = true;
                 newValue = oldValue;
@@ -186,7 +186,7 @@ function dfChange(cell) {
     }
 
     if (!ignore_changes) {
-        table.lt_queued_changes.push({
+        table.mg_queued_changes.push({
             row_index: rowIndex,
             column_name: columnName,
             new_value: newValue,
@@ -198,8 +198,8 @@ function dfChange(cell) {
 
 function inpInput(event) {
     const newValue = event.currentTarget.value;
-    const id = event.currentTarget.parentElement.parentElement.getAttribute("data-lt-id");
-    const fragmentId = event.currentTarget.parentElement.parentElement.getAttribute("data-lt-fragment-id");
+    const id = event.currentTarget.parentElement.parentElement.getAttribute("data-mg-id");
+    const fragmentId = event.currentTarget.parentElement.parentElement.getAttribute("data-mg-fragment-id");
 
     requestUpdate([{
         type: "change",
@@ -211,8 +211,8 @@ function inpInput(event) {
 
 function inpChange(event) {
     const newValue = event.currentTarget.value;
-    const id = event.currentTarget.parentElement.parentElement.getAttribute("data-lt-id");
-    const fragmentId = event.currentTarget.parentElement.parentElement.getAttribute("data-lt-fragment-id");
+    const id = event.currentTarget.parentElement.parentElement.getAttribute("data-mg-id");
+    const fragmentId = event.currentTarget.parentElement.parentElement.getAttribute("data-mg-fragment-id");
 
     requestUpdate([{
         type: "change",
@@ -224,8 +224,8 @@ function inpChange(event) {
 
 function clrChange(event) {
     const newValue = event.currentTarget.value;
-    const id = event.currentTarget.getAttribute("data-lt-id");
-    const fragmentId = event.currentTarget.getAttribute("data-lt-fragment-id");
+    const id = event.currentTarget.getAttribute("data-mg-id");
+    const fragmentId = event.currentTarget.getAttribute("data-mg-fragment-id");
 
     requestUpdate([{
         type: "change",
@@ -298,53 +298,53 @@ function createAppElement(parent, props, fragmentId) {
     } else if (props.type == "container") {
         const elem = document.createElement("div");
 
-        elem.setAttribute("data-lt-id", props.id);
+        elem.setAttribute("data-mg-id", props.id);
         applyCSS(elem, props.css);
         applyAttributes(elem, props.attributes);
 
         if (props.is_fragment_container) {
-            elem.classList.add("lt_fragment_container");
+            elem.classList.add("mg_fragment_container");
             fragmentId = props.fragment_id;
         }
 
         // Sidebar
         //---------
-        if (elem.classList.contains("lt-sidebar")) {
-            let state = elem.classList.contains("lt-show") ? "open" : "closed";
-            const oldElem = document.querySelector(`.lt-sidebar[data-lt-id="${props.id}"]`);
+        if (elem.classList.contains("mg-sidebar")) {
+            let state = elem.classList.contains("mg-show") ? "open" : "closed";
+            const oldElem = document.querySelector(`.mg-sidebar[data-mg-id="${props.id}"]`);
 
             if (oldElem) {
-                if (oldElem.classList.contains("lt-show")) {
+                if (oldElem.classList.contains("mg-show")) {
                     state = "open";
                 } else {
                     state = "closed";
                 }
             }
 
-            LT_SetSidebarState(elem, state);
-            requestAnimationFrame(() => LT_SetSidebarState(elem, state));
+            MG_SetSidebarState(elem, state);
+            requestAnimationFrame(() => MG_SetSidebarState(elem, state));
         }
 
         newElements.push(elem);
     } else if (props.type == "button") {
-        let elem = document.querySelector(`[data-lt-id="${props.id}"]`);
+        let elem = document.querySelector(`[data-mg-id="${props.id}"]`);
 
         if (!elem) {
             elem = document.createElement("dd-button");
 
             let iconHTML = "";
-            if (props.icon) iconHTML = `<lt-icon lt-icon="${props.icon}"></lt-icon>`;
+            if (props.icon) iconHTML = `<mg-icon mg-icon="${props.icon}"></mg-icon>`;
 
             elem.innerHTML = `${iconHTML} ${props.label}`;
-            elem.classList.add("lt-button");
+            elem.classList.add("mg-button");
 
             if (props.style) {
-                elem.classList.add(`lt-button-style-${props.style}`);
+                elem.classList.add(`mg-button-style-${props.style}`);
             }
 
-            elem.setAttribute("data-lt-container-id", props.container_id);
-            elem.setAttribute("data-lt-local-id", props.local_id);
-            elem.setAttribute("data-lt-id", props.id);
+            elem.setAttribute("data-mg-container-id", props.container_id);
+            elem.setAttribute("data-mg-local-id", props.local_id);
+            elem.setAttribute("data-mg-id", props.id);
             elem.addEventListener("click", btnClick);
         } else {
             elem.setAttribute("dd-reconnecting", "");
@@ -361,13 +361,13 @@ function createAppElement(parent, props, fragmentId) {
         elem.innerText = props.text;
         newElements.push(elem);
     } else if (props.type == "text_input") {
-        let elem = document.querySelector(`[data-lt-id="${props.id}"]`);
+        let elem = document.querySelector(`[data-mg-id="${props.id}"]`);
 
         if (!elem) {
             elem = document.createElement("dd-input");
-            elem.classList.add("lt-text-input");
+            elem.classList.add("mg-text-input");
 
-            elem.setAttribute("data-lt-id", props.id);
+            elem.setAttribute("data-mg-id", props.id);
 
             if (props.value != null) {
                 elem.setAttribute("value", props.value);
@@ -395,19 +395,19 @@ function createAppElement(parent, props, fragmentId) {
 
         newElements.push(elem);
     } else if (props.type == "selectbox") {
-        let inpElem = document.querySelector(`dd-input[data-lt-id="${props.id}"]`);
-        let slcElem = document.querySelector(`dd-select[data-lt-id="${props.id}"]`);
+        let inpElem = document.querySelector(`dd-input[data-mg-id="${props.id}"]`);
+        let slcElem = document.querySelector(`dd-select[data-mg-id="${props.id}"]`);
 
         if (!inpElem) {
             inpElem = document.createElement("dd-input");
-            inpElem.classList.add("lt-selectbox");
+            inpElem.classList.add("mg-selectbox");
 
             for (const [key, value] of Object.entries(props.css)) {
                 inpElem.style[key] = value;
             }
 
             slcElem = document.createElement("dd-select");
-            slcElem.classList.add("lt-selectbox");
+            slcElem.classList.add("mg-selectbox");
 
             if (props["multiple"]) {
                 slcElem.setAttribute("dd-multiple", "");
@@ -417,9 +417,9 @@ function createAppElement(parent, props, fragmentId) {
             slcElem.setAttribute("dd-onchange", "mslChange()");
 
             slcElem.setAttribute("dd-width", "anchor");
-            slcElem.setAttribute("data-lt-container-id", props.container_id);
-            slcElem.setAttribute("data-lt-local-id", props.local_id);
-            slcElem.setAttribute("data-lt-id", props.id);
+            slcElem.setAttribute("data-mg-container-id", props.container_id);
+            slcElem.setAttribute("data-mg-local-id", props.local_id);
+            slcElem.setAttribute("data-mg-id", props.id);
 
             for (const op of props.options) {
                 const optElem = document.createElement("dd-option");
@@ -436,15 +436,15 @@ function createAppElement(parent, props, fragmentId) {
         newElements.push(inpElem);
         newElements.push(slcElem);
     } else if (props.type == "color_picker") {
-        let elem = document.querySelector(`[data-lt-id="${props.id}"]`);
+        let elem = document.querySelector(`[data-mg-id="${props.id}"]`);
 
         if (!elem) {
             elem = document.createElement("input");
             elem.setAttribute("type", "color");
             elem.setAttribute("onchange", "clrChange(event)");
-            elem.setAttribute("data-lt-container-id", props.container_id);
-            elem.setAttribute("data-lt-local-id", props.local_id);
-            elem.setAttribute("data-lt-id", props.id);
+            elem.setAttribute("data-mg-container-id", props.container_id);
+            elem.setAttribute("data-mg-local-id", props.local_id);
+            elem.setAttribute("data-mg-id", props.id);
 
             let value = props.value ? props.value : "#999999";
             elem.setAttribute("value", value);
@@ -457,7 +457,6 @@ function createAppElement(parent, props, fragmentId) {
         newElements.push(elem);
     } else if (props.type == "checkboxes") {
         const cbxGroup = DD_Checkbox.getGroup(props.id);
-
 
         if (!cbxGroup) {
             for (const op of props.options) {
@@ -539,51 +538,51 @@ function createAppElement(parent, props, fragmentId) {
             DD_Radio.selectInGroup(props.id, props.value, {silent: true});
         })
     } else if (props.type == "image") {
-        let elem = document.querySelector(`[data-lt-id="${props.id}"]`);
+        let elem = document.querySelector(`[data-mg-id="${props.id}"]`);
 
         if (!elem) {
             // elem = document.createElement("img");
             elem = props.img;
 
-            elem.classList.add("lt-image");
+            elem.classList.add("mg-image");
             //elem.setAttribute("src", props.uri);
             if (props.width) elem.setAttribute("width", props.width);
             if (props.height) elem.setAttribute("height", props.height);
-            elem.setAttribute("data-lt-id", props.id);
+            elem.setAttribute("data-mg-id", props.id);
             applyCSS(elem, props.css);
         }
 
         newElements.push(elem);
     } else if (props.type == "dataframe") {
-        let elem = document.querySelector(`[data-lt-id="${props.id}"]`);
+        let elem = document.querySelector(`[data-mg-id="${props.id}"]`);
 
         if (!elem) {
             elem = document.createElement("div");
 
-            elem.setAttribute("data-lt-container-id", props.container_id);
-            elem.setAttribute("data-lt-local-id", props.local_id);
-            elem.setAttribute("data-lt-id", props.id);
+            elem.setAttribute("data-mg-container-id", props.container_id);
+            elem.setAttribute("data-mg-local-id", props.local_id);
+            elem.setAttribute("data-mg-id", props.id);
 
             elem.style["height"] = props.height;
-            elem.classList.add("lt-dataframe");
+            elem.classList.add("mg-dataframe");
 
             const lining = document.createElement("div");
-            lining.classList.add("lt-dataframe-lining");
-            lining.setAttribute("data-lt-container-id", props.container_id);
-            lining.setAttribute("data-lt-local-id", props.local_id);
-            lining.setAttribute("data-lt-id", props.id);
-            lining.setAttribute("data-lt-fragment-id", fragmentId);
+            lining.classList.add("mg-dataframe-lining");
+            lining.setAttribute("data-mg-container-id", props.container_id);
+            lining.setAttribute("data-mg-local-id", props.local_id);
+            lining.setAttribute("data-mg-id", props.id);
+            lining.setAttribute("data-mg-fragment-id", fragmentId);
             elem.appendChild(lining);
 
             for (const [i, row] of props.initial_value.entries()) {
-                row.lt_original_index = i+1;
+                row.mg_original_index = i+1;
             }
 
             let columns = [];
 
             if (("initial_value" in props) && props.initial_value.length) {
                 for (const columnName of Object.keys(props.initial_value[0])) {
-                    if (columnName == "lt_original_index") continue;
+                    if (columnName == "mg_original_index") continue;
 
                     let columnOptions = {
                         field: columnName,
@@ -663,8 +662,8 @@ function createAppElement(parent, props, fragmentId) {
                 editTriggerEvent:"dblclick"
             });
 
-            table.lt_column_config = props.column_config;
-            table.lt_queued_changes = [];
+            table.mg_column_config = props.column_config;
+            table.mg_queued_changes = [];
 
             // Handle Delete/Backspace
             //---------------------------------------
@@ -743,7 +742,7 @@ function createAppElement(parent, props, fragmentId) {
     if (newElements.length) {
         for (const elem of newElements) {
             parent.appendChild(elem);
-            elem.setAttribute("data-lt-fragment-id", fragmentId);
+            elem.setAttribute("data-mg-fragment-id", fragmentId);
         }
 
         if (props.type == "container") {
@@ -805,7 +804,7 @@ async function displayRerunResponse(msg) {
 
     const fragmentId = msg.root["fragment_id"];
 
-    const oldFragContainer = document.querySelector(`.lt_fragment_container[data-lt-fragment-id="${fragmentId}"]`);
+    const oldFragContainer = document.querySelector(`.mg_fragment_container[data-mg-fragment-id="${fragmentId}"]`);
     const computedStyle = getComputedStyle(oldFragContainer.firstElementChild);
     oldFragContainer.style.visibility = "hidden";
 
@@ -879,30 +878,30 @@ function wsOnError(err) {
     console.error(err);
 }
 
-function LT_SetSidebarState(sidebarElem, state) {
-    const btn = sidebarElem.querySelector(".lt-sidebar-toggle-button");
+function MG_SetSidebarState(sidebarElem, state) {
+    const btn = sidebarElem.querySelector(".mg-sidebar-toggle-button");
 
     if (state == "open") {
-        sidebarElem.classList.add("lt-show");
+        sidebarElem.classList.add("mg-show");
         if (btn) {
-            btn.innerHTML = sidebarElem.dataset.ltCloseLabel;
+            btn.innerHTML = sidebarElem.dataset.mgCloseLabel;
         }
     } else {
-        sidebarElem.classList.remove("lt-show");
+        sidebarElem.classList.remove("mg-show");
         if (btn) {
-            btn.innerHTML = sidebarElem.dataset.ltOpenLabel;
+            btn.innerHTML = sidebarElem.dataset.mgOpenLabel;
         }
     }
 }
 
-function LT_ToggleSidebar(event) {
+function MG_ToggleSidebar(event) {
     const btn = event.currentTarget;
     const sidebarElem = btn.parentElement.parentElement;
 
-    if (sidebarElem.classList.contains("lt-show")) {
-        LT_SetSidebarState(sidebarElem, "closed");
+    if (sidebarElem.classList.contains("mg-show")) {
+        MG_SetSidebarState(sidebarElem, "closed");
     } else {
-        LT_SetSidebarState(sidebarElem, "open");
+        MG_SetSidebarState(sidebarElem, "open");
     }
 }
 
@@ -919,7 +918,7 @@ async function loadIconMap(url) {
 }
 
 (async function main(){
-    g.materialIcons = await loadIconMap("/Lit.jl/fonts/MaterialIconsOutlined-Regular.codepoints");
+    g.materialIcons = await loadIconMap("/Magic.jl/fonts/MaterialIconsOutlined-Regular.codepoints");
 
     let wsEndpoint = `wss://${location.host}`;
     if (location.protocol == "http:") {
@@ -932,5 +931,5 @@ async function loadIconMap(url) {
     g.ws.addEventListener("close", wsOnClose);
     g.ws.addEventListener("error", wsOnError);
 
-    window.customElements.define("lt-icon", LT_Icon);
+    window.customElements.define("mg-icon", MG_Icon);
 })();

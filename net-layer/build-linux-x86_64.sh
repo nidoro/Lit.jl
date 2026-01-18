@@ -15,7 +15,7 @@ g++ \
     -Wno-unused-result \
     -shared \
     -fPIC \
-    -o ../build/linux-x86_64/artifacts-linux-x86_64/liblit.so \
+    -o ../build/linux-x86_64/artifacts-linux-x86_64/libmagic.so \
     \
         -I../build/linux-x86_64/openssl-OpenSSL_1_1_1t/include \
         -I../build/linux-x86_64/libwebsockets-4.3.2/include \
@@ -42,6 +42,6 @@ g++ \
         -l:libsqlite3.a \
     -Wl,--end-group \
     \
-    src/Lit.cpp
+    src/Magic.cpp
 
 popd
