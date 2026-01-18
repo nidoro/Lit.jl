@@ -5,7 +5,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 const config: Config = {
-  title: 'Lit.jl',
+  title: 'Magic.jl',
   tagline: 'A new way of creating Julia web apps!',
   favicon: 'img/favicon/favicon.ico',
 
@@ -23,7 +23,7 @@ const config: Config = {
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'nidoro', // Usually your GitHub org/user name.
-  projectName: 'Lit.jl', // Usually your repo name.
+  projectName: 'Magic.jl', // Usually your repo name.
 
   onBrokenLinks: 'throw',
 
@@ -84,10 +84,10 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: 'Lit.jl',
+      title: 'Magic.jl',
       logo: {
         alt: 'My Site Logo',
-        src: 'img/lit-logo.svg',
+        src: 'img/magic-logo.svg',
       },
       items: [
         {
@@ -98,7 +98,7 @@ const config: Config = {
         },
         //{to: '/blog', label: 'Blog', position: 'left'},
         {
-          href: 'https://github.com/nidoro/Lit.jl',
+          href: 'https://github.com/nidoro/Magic.jl',
           label: 'GitHub',
           position: 'right',
         },

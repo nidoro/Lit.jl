@@ -48,8 +48,8 @@ Example:
 
 ```julia
 @page_startup begin
-    set_title("My Lit App")
-    set_description("An awesome app built with Lit.jl")
+    set_title("My Magic App")
+    set_description("An awesome app built with Magic.jl")
 end
 ```
 

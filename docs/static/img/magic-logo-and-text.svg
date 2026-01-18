@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="635"
+   height="198"
+   viewBox="0 0 168.01036 52.387494"
+   version="1.1"
+   id="svg115"
+   sodipodi:docname="magic-logo-and-text.svg"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview117"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="true"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="1.4797168"
+     inkscape:cx="304.45014"
+     inkscape:cy="105.76348"
+     inkscape:window-width="1920"
+     inkscape:window-height="1008"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs112" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-1.212715,-3.9150773)">
+    <path
+       id="rect223-3"
+       style="fill:#aa7dc0;fill-opacity:1;stroke:#945bb0;stroke-width:1.587;stroke-dasharray:none;stroke-opacity:1"
+       d="M 38.706003,5.8705695 A 14.411523,22.955212 0 0 1 24.294698,28.825436 14.411523,22.955212 0 0 1 38.706003,51.780299 14.411523,22.955212 0 0 1 53.11836,28.825436 14.411523,22.955212 0 0 1 38.706003,5.8705695 Z" />
+    <path
+       id="rect223-5-6"
+       style="fill:#6bab5b;fill-opacity:1;stroke:#3b972e;stroke-width:1.5875;stroke-dasharray:none;stroke-opacity:1"
+       d="m 20.837719,8.6033405 a 7.3695135,7.3695135 0 0 1 -7.369403,7.3694035 7.3695135,7.3695135 0 0 1 7.369403,7.369402 7.3695135,7.3695135 0 0 1 7.36994,-7.369402 7.3695135,7.3695135 0 0 1 -7.36994,-7.3694035 z" />
+    <path
+       id="rect223-5-3-7"
+       style="fill:#d66661;fill-opacity:1;stroke:#c93d39;stroke-width:1.5875;stroke-dasharray:none;stroke-opacity:1"
+       d="M 16.65608,28.760237 A 12.577048,12.577048 0 0 1 4.0792224,41.337096 12.577048,12.577048 0 0 1 16.65608,53.913954 12.577048,12.577048 0 0 1 29.233856,41.337096 12.577048,12.577048 0 0 1 16.65608,28.760237 Z" />
+    <text
+       xml:space="preserve"
+       style="font-size:31.75px;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';fill:#ffffff;stroke:#8f8f8f;stroke-width:0.79375;stroke-dasharray:none;stroke-opacity:1"
+       x="57.434021"
+       y="39.375961"
+       id="text351"><tspan
+         sodipodi:role="line"
+         id="tspan349"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';fill:#ffffff;stroke:#8f8f8f;stroke-width:0.79375;stroke-dasharray:none;stroke-opacity:1"
+         x="57.434021"
+         y="39.375961">Magic.jl</tspan></text>
+  </g>
+</svg>

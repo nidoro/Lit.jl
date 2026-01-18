@@ -12,14 +12,14 @@ Generates a file path where you can save a file to be served in your app.
 
 Some widgets serve resources (files) to the client, such as `image`, which
 serves an image in a given system path. Such widgets can only serve resources
-that live inside your project's `.Lit/served-files/` directory and
+that live inside your project's `.Magic/served-files/` directory and
 subdirectories.
 
 `gen_resource_path()` is a convenience function to be used when you want
 don't care for the name of the file you want to serve, nor where it lives, as
-long as it is "serveable", i.e. it lives somewhere inside `.Lit/served-files/`.
+long as it is "serveable", i.e. it lives somewhere inside `.Magic/served-files/`.
 `gen_resource_path()` generates a path with a random file name with a given
-extension inside `.Lit/served-files/generated`. You are then supposed to save your
+extension inside `.Magic/served-files/generated`. You are then supposed to save your
 file in the returned path and pass this path to the wiget you want.
 
 For instance, consider an app that displays a plot given some user input. The
@@ -56,5 +56,5 @@ function gen_resource_path(extension::String; lifetime::String="session")::Strin
 
 ### Return Value
 
-A random file path inside `.Lit/served-files/generated/` with extension
+A random file path inside `.Magic/served-files/generated/` with extension
 `extension`.

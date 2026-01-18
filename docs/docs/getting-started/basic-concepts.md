@@ -16,16 +16,16 @@ You can have separate persistent data for each session. See
 [Session persistent data](/docs/build/docs/api-reference/application-logic/session-persistent-data)
 to learn more.
 
-`Lit.jl` web apps are julia scripts that run from top to bottom. This happens
+`Magic.jl` web apps are julia scripts that run from top to bottom. This happens
 whenever a new session is started and whenever the user interacts with an
 element of your app.
 
 ## Initialization code blocks
 
-`Lit.jl` web apps are julia scripts that run from top to bottom. But
+`Magic.jl` web apps are julia scripts that run from top to bottom. But
 initialization tasks should only be executed once, at the appropriate time.
 
-`Lit.jl` defines three macros that you can use to enclose code blocks that
+`Magic.jl` defines three macros that you can use to enclose code blocks that
 should only be executed at the initialization moment.
 
 - [`@app_startup`](/docs/build/docs/api-reference/application-logic/app_startup-macro):
@@ -137,13 +137,13 @@ actions that will affect how the app looks and behaves.
 
 ## Multiple Pages
 
-`Lit.js` web apps can have multiple pages. Each page is bound to one or more
+`Magic.js` web apps can have multiple pages. Each page is bound to one or more
 URL paths by calling the [`add_page()`](/docs/build/docs/api-reference/application-logic/page-static-settings)
 function at a [`@app_startup`](/docs/build/docs/api-reference/application-logic/app_startup-macro)
 code block. Example:
 
 ```julia
-using Lit
+using Magic
 
 @app_startup begin
     add_page(["/", "/home"])

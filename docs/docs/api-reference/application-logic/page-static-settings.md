@@ -13,8 +13,8 @@ Example:
 
 ```julia
 @page_startup begin
-    set_title("My Lit App")
-    set_description("An awesome app built with Lit.jl")
+    set_title("My Magic App")
+    set_description("An awesome app built with Magic.jl")
 end
 ```
 
@@ -63,7 +63,7 @@ function add_font(font_name::String, src_or_path::String)::Nothing
 Argument        | Description
 ---------------- |-------------
  `font_name`        | `String`. The name that should be associated with the font.
- `src_or_path` | `String`. Either an external URL or a local serveable path inside the project's `.Lit/served-files/` directory. We recommend that you place all of your font files inside `.Lit/served-files/fonts/`.
+ `src_or_path` | `String`. Either an external URL or a local serveable path inside the project's `.Magic/served-files/` directory. We recommend that you place all of your font files inside `.Magic/served-files/fonts/`.
 
 ## add_css_rule
 

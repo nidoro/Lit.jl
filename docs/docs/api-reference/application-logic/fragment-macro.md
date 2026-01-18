@@ -41,10 +41,10 @@ a fragment.
 
 ## Example
 
-[Live example here](https://lit.coisasdodavi.net/fragment-example).
+[Live example here](https://magic.coisasdodavi.net/fragment-example).
 
 ```julia
-using Lit
+using Magic
 
 @once mutable struct SessionData
     app_reruns::Int

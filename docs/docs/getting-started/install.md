@@ -8,30 +8,30 @@ sidebar_position: 1
 
 ### Option 1: Global installation
 
-Use the CLI command below to install `Lit.jl` globally.
+Use the CLI command below to install `Magic.jl` globally.
 
 ```bash
-$ julia -e 'using Pkg; Pkg.add(url="https://github.com/nidoro/Lit.jl")'
+$ julia -e 'using Pkg; Pkg.add(url="https://github.com/nidoro/Magic.jl")'
 ```
 
 ### Option 2: Local project installation
 
-Use the CLI command below to install `Lit.jl` in the current project.
+Use the CLI command below to install `Magic.jl` in the current project.
 
 ```bash
-$ julia --project -e 'using Pkg; Pkg.add(url="https://github.com/nidoro/Lit.jl")'
+$ julia --project -e 'using Pkg; Pkg.add(url="https://github.com/nidoro/Magic.jl")'
 ```
 
 ## Implementing `Hello World`
 
-`Lit.jl` web apps are julia scripts that run from top to bottom.
+`Magic.jl` web apps are julia scripts that run from top to bottom.
 
-See below a simple `Hello World` script using `Lit.jl` saved with the name
+See below a simple `Hello World` script using `Magic.jl` saved with the name
 `app.jl`:
 
 ```julia
 # app.jl
-using Lit
+using Magic
 if button("Click me")
     text("Hello World!")
 end
@@ -46,7 +46,7 @@ The previous example web app can be started in the following ways:
 We use the `start_app()` function to start serving a web app from the REPL.
 
 ```julia
-> using Lit
+> using Magic
 > start_app()
 ```
 
@@ -78,11 +78,11 @@ In summary, this is the basic web app development workflow:
 
 ### Option 2: From the terminal
 
-Starting from Julia 1.12, `Lit.jl` can be executed as a command line tool using
+Starting from Julia 1.12, `Magic.jl` can be executed as a command line tool using
 the `-m` julia flag.
 
 ```bash
-$ julia --project -m Lit
+$ julia --project -m Magic
 ```
 
 All of the arguments accepted by [`start_app()`](/docs/build/docs/api-reference/application-logic/start_app-func)
@@ -91,10 +91,10 @@ specifies the script that should be run and the port that the server should
 listen to:
 
 ```bash
-$ julia --project -m Lit "my_app.jl" --port 443
+$ julia --project -m Magic "my_app.jl" --port 443
 ```
 
-Run `julia -m Lit --help` to learn more.
+Run `julia -m Magic --help` to learn more.
 
 Starting the web app from the terminal is not recommended if you are developing
 the web app, because during development, you may need to restart the server to
@@ -106,7 +106,7 @@ people's app that you don't intend to change.
 
 ## Check out our Demo Apps
 
-A great way to learn how to use `Lit.jl` is checking out our [demo apps](https://lit.coisasdodavi.net/)
+A great way to learn how to use `Magic.jl` is checking out our [demo apps](https://magic.coisasdodavi.net/)
 and exploring their source code.
 
 

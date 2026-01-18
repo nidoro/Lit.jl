@@ -9,7 +9,7 @@ Start the application server.
 Call this function from the REPL to start the web app. Example:
 
 ```julia
-> using Lit
+> using Magic
 > start_app("my-app.jl")
 ```
 
@@ -30,8 +30,8 @@ function start_app(
  `script_path` | A `String` specifying the path to the application script to run.
  `host_name`   | A `String` specifying the hostname or IP address the server should bind to. Default is `"localhost"`.
  `port`        | An `Int` specifying the port number on which the server will listen. Default is `3443`.
- `docs_path`   | A `String` specifying a path to Lit's docs where it has been built, or `nothing` (default). If a `String` is passed, the docs will be served under `/docs`.
- `dev_mode`    | A `Bool`. If `true`, development mode is enabled. This activates features such as more verbose error reporting and loading of locally built `liblit.so`.
+ `docs_path`   | A `String` specifying a path to Magic's docs where it has been built, or `nothing` (default). If a `String` is passed, the docs will be served under `/docs`.
+ `dev_mode`    | A `Bool`. If `true`, development mode is enabled. This activates features such as more verbose error reporting and loading of locally built `libmagic.so`.
 
 ### Return Value
 

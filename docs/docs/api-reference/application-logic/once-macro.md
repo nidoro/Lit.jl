@@ -42,8 +42,8 @@ The above code will work on the first session pass but will fail in the next
 one with the following message:
 
 > LoadError:
->   MethodError: Cannot \`convert\` an object of type **Main.LitApp.Foo**
->   to an object of type **Main.LitApp.Foo**.
+>   MethodError: Cannot \`convert\` an object of type **Main.MagicApp.Foo**
+>   to an object of type **Main.MagicApp.Foo**.
 
 This means that `Foo` was redefined and its new definition cannot be converted
 to the original one that is being used in the session persistent data.

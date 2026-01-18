@@ -15,7 +15,7 @@ pushd $THIS_DIR/.. # Repo's root
 #----------------------------
 
 # Build libmagic.so on Ubuntu 20.04 (LTS)
-docker run --rm -v "$PWD":/work magic-build:20.04 bash -c "./net-layer/build-linux-x86_64.sh"
+docker run --rm -v "$PWD":/work lit-build:20.04 bash -c "./net-layer/build-linux-x86_64.sh"
 
 ARTIFACTS_DIR=build/linux-x86_64/artifacts-linux-x86_64
 
