@@ -1,7 +1,7 @@
 name = "Magic"
 uuid = "938144cb-3a24-4977-a248-a12dea9dd101"
 authors = ["Davi Doro <ni.doro@gmail.com>"]
-version = "v0.4.0-a"
+version = "v0.4.0"
 
 [deps]
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"

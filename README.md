@@ -6,7 +6,7 @@
 ---
 
 Made for scientists and researchers, `Magic.jl` is a web app framework for Julia
-that makes it easy for you to build awesome interactable web pages in no time!
+that makes it easy for you to build awesome interactive web pages in no time!
 
 ## 🔥 Features
 
