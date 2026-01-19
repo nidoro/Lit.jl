@@ -98,11 +98,6 @@ but we try our best to not get in their way when they need more control.
 
 As long as we are in version `0.x`, there are a few things that you should know:
 
-- **API Stability**: The API is not stable. It can change. Hopefully not often,
-but we can't promise that. So we are not adhering to
-[Semantic Versioning](https://semver.org/) just yet, although we intend to on
-version `1.0` forward. Public API breaking changes can be found in
-`CHANGELOG.txt`.
 - **Collaboration**: You can collaborate for with Magic's development by using it,
 testing it and giving your feedback on
 [issues](https://github.com/nidoro/Magic.jl/issues). But at this point in time,
