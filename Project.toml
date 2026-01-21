@@ -1,7 +1,7 @@
 name = "Magic"
 uuid = "938144cb-3a24-4977-a248-a12dea9dd101"
 authors = ["Davi Doro <ni.doro@gmail.com>"]
-version = "0.4.0"
+version = "0.4.1"
 
 [deps]
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
@@ -23,11 +23,11 @@ Libdl = "1.10"
 SHA = "0.7"
 JSON = "0.21, 1.0"
 Tables = "1.12"
+Artifacts = "1.10"
 julia = "1.10"
 DataFrames = "1.8"
 Parameters = "0.12"
 Logging = "1.10"
 Sockets = "1.10"
-ArgParse = "1.2"
-Artifacts = "1.10"
 TOML = "1.0"
+ArgParse = "1.2"
