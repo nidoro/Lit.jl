@@ -1,5 +1,10 @@
 # CHANGELOG
 
+### v0.4.1 (2026-01-20)
+
+- Hot-fix: Fixes server crash after session is closed
+https://github.com/nidoro/Magic.jl/issues/6
+
 ### v0.4.0 (2026-01-18)
 
 - Breaking-change: Package name change from Lit.jl to Magic.jl.
