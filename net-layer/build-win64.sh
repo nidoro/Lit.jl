@@ -16,12 +16,12 @@ x86_64-w64-mingw32-gcc \
     -fPIC \
     -o ../build/win64/artifacts-win64/libmagic.dll \
     \
-        -I../build/win64/openssl-OpenSSL_1_1_1t/include \
+        -I../build/win64/openssl-1.1.1t/include \
         -I../build/win64/libwebsockets-4.3.2/include \
         -I../build/win64/sqlite-amalgamation-3420000/include \
         -I../build/win64/icu-release-78.1/include \
     \
-        -L../build/win64/openssl-OpenSSL_1_1_1t/lib \
+        -L../build/win64/openssl-1.1.1t/lib \
         -L../build/win64/libwebsockets-4.3.2/lib \
         -L../build/win64/sqlite-amalgamation-3420000/lib \
         -L../build/win64/icu-release-78.1/lib \

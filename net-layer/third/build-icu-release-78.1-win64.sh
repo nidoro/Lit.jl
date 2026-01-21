@@ -12,6 +12,9 @@ pushd $THIS_DIR/icu-release-78.1
 
 #make clean
 mkdir -p $DEST_DIR
+mkdir -p $DEST_DIR/bin
+mkdir -p $DEST_DIR/lib
+mkdir -p $DEST_DIR/include
 
 ./icu4c/source/configure \
     --with-cross-build="$NATIVE_BUILD" \
@@ -19,8 +22,10 @@ mkdir -p $DEST_DIR
     --build=x86_64-linux-gnu \
     --prefix=$DEST_DIR \
     --enable-static \
-    --disable-shared \
+    --disable-tests \
+    --disable-samples \
     --disable-tools \
+    --disable-layout \
     --disable-extras \
     LDFLAGS="-lwinpthread" \
     CFLAGS="-fPIC" \

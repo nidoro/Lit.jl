@@ -1,9 +1,9 @@
 #!/bin/bash
 
 THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-pushd $THIS_DIR
+pushd $THIS_DIR/sqlite-amalgamation-3420000
 
-DEST_DIR=$THIS_DIR/../../../build/linux-x86_64/sqlite-amalgamation-3420000
+DEST_DIR=$THIS_DIR/../../build/linux-x86_64/sqlite-amalgamation-3420000
 mkdir -p $DEST_DIR/include
 mkdir -p $DEST_DIR/lib
 

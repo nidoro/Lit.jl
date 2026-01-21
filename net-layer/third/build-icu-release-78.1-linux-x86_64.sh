@@ -12,7 +12,7 @@ mkdir -p $DEST_DIR
     --prefix=$DEST_DIR \
     --enable-static \
     --disable-shared \
-    --disable-extras \
+    --disable-tests \
     CFLAGS="-fPIC" \
     CXXFLAGS="-fPIC"
 
