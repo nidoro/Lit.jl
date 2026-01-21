@@ -88,7 +88,10 @@ const WidgetKind_Code = 9
     checkboxes::Function = (args...; kwargs...)->()
 end
 
-CONTAINER_INTERFACE_FUNCS = [:columns, :column, :row, :button, :image, :html, :h1, :h2, :h3, :h4, :h5, :h6, :dataframe, :checkbox, :checkboxes]
+CONTAINER_INTERFACE_FUNCS = [
+    :columns, :column, :row, :button, :image, :html,
+    :h1, :h2, :h3, :h4, :h5, :h6, :dataframe, :checkbox, :checkboxes
+]
 
 function (container_interface::ContainerInterface)(inner_func::Function)::Nothing
     push_container(container_interface)
