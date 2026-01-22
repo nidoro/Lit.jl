@@ -1931,10 +1931,12 @@ function rerun(client_id::Cint, payload::Dict)::Task
         end
 
     catch e
+        task = task_local_storage("app_task")
+
         if !task.session.client_left
             bt = catch_backtrace()
-            # TODO: Update cut-off point!
-            frames = filtered_stacktrace(bt; cutoff_file = "MagicUserSpace.jl")
+
+            frames = filtered_stacktrace(bt)
             err_message = remove_lines_starting_with(sprint(showerror, e), "in expression starting")
             st = sprint(Base.show_backtrace, frames)
 
@@ -1946,7 +1948,6 @@ function rerun(client_id::Cint, payload::Dict)::Task
                 html("span", st)
             end
 
-            task = task_local_storage("app_task")
             filter!(p -> p.second.alive, task.session.widgets)
             put!(g.internal_events, InternalEvent(InternalEventType_Task, task))
         else
