@@ -1542,7 +1542,7 @@ function set_value(user_id::String, value::Any)::Nothing
         widget.value = value
         widget.props["value"] = value
     else
-        # TODO: WIDGET NOT FOUND
+        # TODO: Handle widget not found
     end
     return nothing
 end
