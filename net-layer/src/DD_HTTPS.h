@@ -2992,11 +2992,11 @@ void HS_Destroy(HS_Server* server) {
     lws_context_destroy(server->lwsContext);
 }
 
-void HS_AddRedirToHTTPSVHost(HS_Server* server, const char* vhostName, const char* fromHostname, int fromPort, const char* toHostname, int toPort) {
+void HS_AddRedirToHTTPSVHost(HS_Server* server, const char* vhostName, const char* fromHostname, int fromPort, const char* toHostname, int toPort, bool disableSSL=false) {
     HS_AddVHost(server, vhostName);
     HS_VHost* vhost = HS_GetVHost(server, vhostName);
     
-    vhost->lwsContextInfo.options = 0;
+    vhost->lwsContextInfo.options = disableSSL ? 0 : LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
     vhost->lwsContextInfo.vhost_name = fromHostname;
     vhost->lwsContextInfo.port = fromPort;
     vhost->lwsContextInfo.protocols = {};
@@ -3287,7 +3287,7 @@ bool HS_InitFileServer(HS_Server* server, const char* vhostName, const char* con
         if (vhost->port == 443) {
             char redirName[HS__HostNameCap+12] = {};
             sprintf(redirName, "%s-80-to-443", vhost->hostName);
-            HS_AddRedirToHTTPSVHost(server, redirName, vhost->hostName, 80, vhost->hostName, vhost->port);
+            HS_AddRedirToHTTPSVHost(server, redirName, vhost->hostName, 80, vhost->hostName, vhost->port, true);
         }
         
         if (vhost->gkConfig) {

@@ -426,11 +426,11 @@ MG_API void* MG_RunServer(void*) {
     g.hserver = HS_CreateServer(0, disableSSL);
     HS_InitServer(&g.hserver, true);
     HS_AddVHost(&g.hserver, "magic-app");
+    HS_SetVHostHostName(&g.hserver, "magic-app", g.appHostName);
+    HS_SetVHostPort(&g.hserver, "magic-app", g.appPort);
     HS_SetLWSVHostConfig(&g.hserver, "magic-app", pt_serv_buf_size, HS_KILO_BYTES(12));
     HS_SetLWSProtocolConfig(&g.hserver, "magic-app", "HTTP", rx_buffer_size, HS_KILO_BYTES(12));
     HS_SetHTTPGetHandler(&g.hserver, "magic-app", HS_GetFileByURI);
-    HS_SetVHostHostName(&g.hserver, "magic-app", g.appHostName);
-    HS_SetVHostPort(&g.hserver, "magic-app", g.appPort);
     HS_AddProtocol(&g.hserver, "magic-app", "ws", handleEvent, MG_Client);
     HS_PushCacheBust(&g.hserver, "magic-app", "*.html");
     HS_PushCacheControlMapping(&g.hserver, "magic-app", "*.html", "no-cache, no-store, must-revalidate");
@@ -467,6 +467,14 @@ MG_API void* MG_RunServer(void*) {
         HS_InitFileServer(&g.hserver, "magic-companion", ".Magic/companion-host.json");
         if (g.verbose) {
             HS_SetVHostVerbosity(&g.hserver, "magic-companion", 1);
+        }
+
+        // HACK: Create a lit.coisasdodavi.net vhost that redirects
+        // to magic.coisasdodavi.net. This is temporary, just while the package
+        // name change is recent.
+        HS_AddRedirToHTTPSVHost(&g.hserver, "lit-redir", "lit.coisasdodavi.net", 443, "magic.coisasdodavi.net", 443);
+        if (!disableSSL) {
+            HS_SetCertificate(&g.hserver, "lit-redir", ".Magic/certs/certificate.crt", ".Magic/certs/private.key");
         }
     }
 

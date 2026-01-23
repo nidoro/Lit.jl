@@ -30,9 +30,9 @@ g++ \
     -Wl,--whole-archive \
         -l:libwebsockets.a \
         -l:libssl.a \
-        -l:libcrypto.a \
     -Wl,--no-whole-archive \
     \
+    -l:libcrypto.a \
     -Wl,--start-group \
         -l:libSqliteIcu.a \
         -l:libicui18n.a \
