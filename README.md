@@ -37,7 +37,7 @@ science web app.
 ### 1. Install:
 
 ```bash
-$ julia -e 'using Pkg; Pkg.add(url="https://github.com/nidoro/Magic.jl")'
+pkg> add Magic
 ```
 
 ### 2. Implement `app.jl`:

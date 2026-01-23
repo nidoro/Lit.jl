@@ -11,15 +11,21 @@ sidebar_position: 1
 Use the CLI command below to install `Magic.jl` globally.
 
 ```bash
-$ julia -e 'using Pkg; Pkg.add(url="https://github.com/nidoro/Magic.jl")'
+$ julia -e 'using Pkg; Pkg.add("Magic")'
 ```
 
 ### Option 2: Local project installation
 
-Use the CLI command below to install `Magic.jl` in the current project.
+Initialize the REPL in the current project:
 
 ```bash
-$ julia --project -e 'using Pkg; Pkg.add(url="https://github.com/nidoro/Magic.jl")'
+$ julia --project
+```
+
+Press `]` in the Julia REPL to enter Pkg mode and enter this:
+
+```bash
+pkg> add MyPackage
 ```
 
 ## Implementing `Hello World`
