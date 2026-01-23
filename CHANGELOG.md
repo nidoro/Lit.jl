@@ -1,5 +1,9 @@
 # CHANGELOG
 
+### v0.4.3 (xxx)
+
+- New: `build-third.sh` script to build all third party libraries within docker.
+
 ### v0.4.2 (2026-01-22)
 
 - Updates documentation installation instructions now that the package is
