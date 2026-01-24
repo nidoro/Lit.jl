@@ -18,6 +18,7 @@ var g = {
     devMode: false,
     nextRequestId: 1,
     lastValidRerunResponse: null,
+    sessionId: null,
 };
 
 function getLocation() {
@@ -769,7 +770,11 @@ function wsOnOpen() {
     if (g.devMode) {
         console.log("Connected to net-layer");
     }
-    requestUpdate([]);
+
+    wsSendObj({
+        type: "hello",
+        location: getLocation(),
+    });
 }
 
 function getImages(props) {
@@ -867,6 +872,12 @@ async function wsOnMessage(event) {
         }
     } else if (msg.type == "please_refresh") {
         location.reload();
+    } else if (msg.type == "response_hello") {
+        g.sessionId = msg.session_id;
+        if (g.devMode) {
+            console.log(`Session: ${g.sessionId}`);
+        }
+        requestUpdate([]);
     }
 }
 

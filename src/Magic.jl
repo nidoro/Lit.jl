@@ -1797,6 +1797,7 @@ function handle_new_client(client_id::Cint, session_id::String)::Nothing
 
     mkpath(".Magic/served-files/generated/session-$(client_id)")
     mkpath(".Magic/served-files/generated/$(session_id)")
+    mkpath(".Magic/uploaded-files/$(session_id)")
 
     return nothing
 end
@@ -2395,6 +2396,17 @@ function start_app(
                         end
                     elseif payload["type"] == "ack_invalid_state"
                         session.waiting_invalid_state_ack = false
+                    elseif payload["type"] == "hello"
+                        @debug "Hello from client $(session.client_id) ($(session.session_id))"
+                        payload = Dict(
+                            "type" => "response_hello",
+                            "session_id" => session.session_id,
+                            "dev_mode" => g.dev_mode,
+                        )
+                        payload_string = JSON.json(payload)
+                        app_event = create_app_event(AppEventType_NewPayload, session.client_id, payload_string)
+                        push_app_event(app_event)
+                        write(g.ipc_connection, " ")
                     else
                         @error "Unknown payload type '$(payload["type"])'"
                     end
