@@ -3,7 +3,7 @@ module Magic
 # Interface Elements
 #--------------------
 export html, text, h1, h2, h3, h4, h5, h6, link, space, metric, button, image,
-dataframe, selectbox, radio, checkbox, checkboxes, text_input,
+dataframe, selectbox, radio, checkbox, checkboxes, text_input, file_uploader,
 code, color_picker, get_value, set_value, get_changes
 
 # Layout Elements
@@ -1345,13 +1345,13 @@ function create_dataframe(
 end
 
 function dataframe(
-        data::DataFrame;
-        column_config::Dict=Dict(),
-        height::String="400px",
-        id::Union{String, Nothing}=nothing,
-        onchange::Function=(args...; kwargs...)->(),
-        args::Vector=Vector()
-    )::DataFrame
+    data::DataFrame;
+    column_config::Dict=Dict(),
+    height::String="400px",
+    id::Union{String, Nothing}=nothing,
+    onchange::Function=(args...; kwargs...)->(),
+    args::Vector=Vector()
+)::DataFrame
 
     task = task_local_storage("app_task")
     widgets = task.session.widgets
@@ -1389,6 +1389,26 @@ function dataframe(
     end
 
     return create_dataframe(widgets, top_container(), id, data, cc, height, onchange, args)
+end
+
+# File uploader
+#-----------------
+mutable struct UploadedFile
+    name::String
+    format::String
+    size::Int
+    bytes::Vector{UInt8}
+end
+
+function file_uploader(
+    label::String,
+    formats::Vector{String}=Vector{String}(),
+    id::Union{String, Nothing}=nothing,
+    onchange::Function=(args...; kwargs...)->(),
+    args::Vector=Vector()
+)::Union{UploadedFile, Nothing}
+    # TODO
+    return nothing
 end
 
 # HTML
