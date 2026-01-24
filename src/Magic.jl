@@ -34,6 +34,8 @@ using Random
 using Artifacts
 using TOML
 
+const MG_SESSION_ID_SIZE = 32-1
+
 # Colored log utils
 #-------------------------
 const AC_Reset         = "\x1b[0m"
@@ -180,6 +182,7 @@ const NetEventType_ServerLoopInterrupted = Cint(4)
 @with_kw mutable struct NetEvent
     ev_type::NetEventType = NetEventType_None
     client_id::Cint = 0
+    session_id::NTuple{MG_SESSION_ID_SIZE, UInt8} = ntuple(_ -> 0x00, MG_SESSION_ID_SIZE)
     payload::Ptr{Cchar} = Ptr{Cchar}(0)
     payload_size::Cint = 0
 end
@@ -216,6 +219,7 @@ end
 
 @with_kw mutable struct Session
     client_id::Cint = 0
+    session_id::String = ""
     widgets::Dict{String, Widget} = Dict{String, Widget}()
     fragments::Dict{String, Fragment} = Dict{String, Fragment}()
     user_session_data::Any = nothing
@@ -262,6 +266,18 @@ macro once(def)
             Magic.USER_TYPES[$(QuoteNode(struct_name))] = $struct_name
         end
     end)
+end
+
+function buffer_to_string(buffer::NTuple{N, UInt8}) where N
+    # Find the null terminator
+    null_pos = findfirst(==(0x00), buffer)
+    if null_pos === nothing
+        # No null terminator, use entire buffer
+        return String(collect(buffer))
+    else
+        # Convert only up to null terminator
+        return String(collect(buffer[1:null_pos-1]))
+    end
 end
 
 function get_rerun_error(e::Exception)::RerunError
@@ -1289,6 +1305,7 @@ function gen_resource_path(extension::String; lifetime::String="session")::Strin
     task = task_local_storage("app_task")
     file_name = "$(get_random_string(32)).$(replace(extension, "." => ""))"
     dir_path = ".Magic/served-files/generated/session-$(task.client_id)"
+    dir_path = ".Magic/served-files/generated/$(task.session.session_id)"
     if lifetime == "app"
         dir_path = ".Magic/served-files/generated/app"
     end
@@ -1746,9 +1763,10 @@ function end_page_config()::Nothing
     return nothing
 end
 
-function handle_new_client(client_id::Cint)::Nothing
+function handle_new_client(client_id::Cint, session_id::String)::Nothing
     session = Session()
     session.client_id = client_id
+    session.session_id = session_id
     session.first_pass = true
 
     root_container_props = Dict(
@@ -1778,6 +1796,7 @@ function handle_new_client(client_id::Cint)::Nothing
     g.sessions[client_id] = session
 
     mkpath(".Magic/served-files/generated/session-$(client_id)")
+    mkpath(".Magic/served-files/generated/$(session_id)")
 
     return nothing
 end
@@ -1795,6 +1814,7 @@ function handle_client_left(client_id::Cint)::Nothing
     session = g.sessions[client_id]
     session.client_left = true
     try_rm(".Magic/served-files/generated/session-$(client_id)", recursive=true, force=true)
+    try_rm(".Magic/served-files/generated/$(session.session_id)", recursive=true, force=true)
     delete!(g.sessions, client_id)
     return nothing
 end
@@ -1999,7 +2019,7 @@ function rerun(client_id::Cint, payload::Dict)::Task
             filter!(p -> p.second.alive, task.session.widgets)
             put!(g.internal_events, InternalEvent(InternalEventType_Task, task))
         else
-            @debug "TaskStoped | Client=$(client_id)"
+            @debug "TaskStoped | Client=$(client_id) | Session=$(task.session.session_id)"
         end
     end
 
@@ -2162,7 +2182,7 @@ function execute_dry_runs()::Bool
         )
     )
 
-    handle_new_client(Cint(0))
+    handle_new_client(Cint(0), "0")
     add_page("/", title="Magic App", description="Magic App")
 
     @info "Dry Run: First pass over '$(g.script_path)'.\n$(AC_Green("@app_startup")) code blocks will run now."
@@ -2326,8 +2346,9 @@ function start_app(
 
             if ev.ev_type == InternalEventType_Network
                 if ev.data.ev_type == NetEventType_NewClient
-                    @debug "NetEventType_NewClient | $(ev.data.client_id)"
-                    handle_new_client(ev.data.client_id)
+                    session_id = buffer_to_string(ev.data.session_id)
+                    @debug "NetEventType_NewClient | ClientId=$(ev.data.client_id) | SessionId=$(session_id)"
+                    handle_new_client(ev.data.client_id, session_id)
                 elseif ev.data.ev_type == NetEventType_ClientLeft
                     @debug "NetEventType_ClientLeft | $(ev.data.client_id)"
                     handle_client_left(ev.data.client_id)
@@ -2416,8 +2437,9 @@ function start_app(
                             end
                         end
                     else
-                        @debug "ClientlessTaskFinished $(ev.data.client_id)"
+                        @debug "ClientlessTaskFinished | Client=$(ev.data.client_id)"
                         try_rm(".Magic/served-files/generated/session-$(session.client_id)", recursive=true, force=true)
+                        try_rm(".Magic/served-files/generated/$(session.session_id)", recursive=true, force=true)
                     end
                 end
             end

@@ -3,6 +3,7 @@
 #include "DD_HTTPS.h"
 #include "DD_LogUtils.h"
 #include "DD_SignalUtils.h"
+#include "DD_RandomUtils.h" // TODO: DD_RandomUtils is not cross-platform!
 
 #ifdef _WIN32
     #include <winsock2.h>
@@ -26,10 +27,13 @@
 #define MG_API
 #endif
 
+#define MG_SESSION_ID_SIZE 32-1
+
 extern "C" {
 
 struct MG_Client {
     int id;
+    char sessionId[MG_SESSION_ID_SIZE+1];
 
     HS_PacketQueue writeQueue;
 
@@ -54,6 +58,7 @@ enum MG_NetEventType {
 struct MG_NetEvent {
     MG_NetEventType type;
     int clientId;
+    char sessionId[MG_SESSION_ID_SIZE+1];
     char* payload;
     int payloadSize;
 };
@@ -108,6 +113,23 @@ struct MG_Global {
 
 MG_Global g;
 
+void MG_GenSessionId(char* output) {
+    bool unique = false;
+
+    while (!unique) {
+        RU_GenerateRandomString(output, MG_SESSION_ID_SIZE, RU_CHAR_SET_ALPHA_NUM);
+        memcpy(output, "session_", 8);
+
+        unique = true;
+        for (int i = 0; i < arrcount(g.clients); ++i) {
+            if (strcmp(g.clients[i]->sessionId, output)==0) {
+                unique = false;
+                break;
+            }
+        }
+    }
+}
+
 MG_API void MG_WakeUpAppLayer() {
 #ifdef _WIN32
     int sent = send(g.fdSocket, "x", 1, 0);
@@ -133,13 +155,17 @@ MG_API MG_Client* MG_GetClient(int id) {
 
 // NOTE: Net events are created and pushed by the network layer and poped and
 // destroyed by the app layer.
-MG_API MG_NetEvent MG_CreateNetEvent(MG_NetEventType type, int clientId, char* payload, int payloadSize) {
+MG_API MG_NetEvent MG_CreateNetEvent(MG_NetEventType type, int clientId, char* sessionId, char* payload, int payloadSize) {
     MG_NetEvent ev = {
         .type=type,
         .clientId=clientId,
         .payload=payload,
         .payloadSize=payloadSize,
     };
+
+    if (sessionId) {
+        strcpy(ev.sessionId, sessionId);
+    }
 
     if (payload) {
         ev.payload = arrstring(payload, payloadSize);
@@ -249,6 +275,7 @@ MG_API int MG_ProcessIncomingMessage(HS_CallbackArgs* args) {
     MG_NetEvent ev = MG_CreateNetEvent(
         MG_NetEventType_NewPayload,
         wcClient->id,
+        wcClient->sessionId,
         wcClient->readBuffer,
         wcClient->readSize
     );
@@ -277,16 +304,14 @@ MG_API int HS_CALLBACK(handleEvent, args) {
 
         case LWS_CALLBACK_ESTABLISHED: {
             wcClient->id = g.nextClientId++;
+            MG_GenSessionId(wcClient->sessionId);
             wcClient->writeQueue = HS_CreatePacketQueue(args->socket, 128);
             wcClient->mutex = (pthread_mutex_t*) malloc(sizeof(pthread_mutex_t));
             pthread_mutex_init(wcClient->mutex, 0);
             arradd(g.clients, wcClient);
 
-            MG_PushNetEvent({
-                .type = MG_NetEventType_NewClient,
-                .clientId = wcClient->id,
-            });
-
+            MG_NetEvent ev = MG_CreateNetEvent(MG_NetEventType_NewClient, wcClient->id, wcClient->sessionId, 0, 0);
+            MG_PushNetEvent(ev);
             MG_WakeUpAppLayer();
         } break;
 
@@ -367,7 +392,7 @@ MG_API void MG_SetStateSize(size_t size) {
 MG_API void MG_HandleSigInt(void* data) {
     HS_Stop(&g.hserver);
 
-    MG_NetEvent ev = MG_CreateNetEvent(MG_NetEventType_ServerLoopInterrupted, 0, 0, 0);
+    MG_NetEvent ev = MG_CreateNetEvent(MG_NetEventType_ServerLoopInterrupted, 0, 0, 0, 0);
     MG_PushNetEvent(ev);
     MG_WakeUpAppLayer();
     close(g.fdSocket);
@@ -456,7 +481,7 @@ MG_API void* MG_RunServer(void*) {
         HS_DisableFileCache(&g.hserver, "magic-app");
     }
 
-    if (g.docsPath) {
+    if (g.docsPath[0]) {
         HS_AddServedFilesDir(&g.hserver, "magic-app", "/docs", g.docsPath);
     }
 
@@ -499,6 +524,9 @@ MG_API void MG_InitNetLayer(
     bool verbose,
     bool devMode
 ) {
+    // TODO: DD_RandomUtils is not cross-platform!
+    RU_OpenURandomDevice();
+
     LU_Disable(&LU_GlobalLogFile);
     LU_EnableStdout(&LU_GlobalLogFile);
     LU_DisableStderr(&LU_GlobalLogFile);
