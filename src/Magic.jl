@@ -209,6 +209,11 @@ end
     payload::Dict = Dict()
 end
 
+@with_kw struct RerunError
+    message::String=""
+    stacktrace::String=""
+end
+
 @with_kw mutable struct Session
     client_id::Cint = 0
     widgets::Dict{String, Widget} = Dict{String, Widget}()
@@ -220,11 +225,15 @@ end
     rerun_queue::Vector{RerunRequest} = Vector{RerunRequest}()
     waiting_invalid_state_ack::Bool = false
     client_left::Bool = false
+    rerun_error::Union{RerunError, Nothing} = nothing
+    refresh::Bool = false
 end
 
 @with_kw mutable struct Global
     initialized::Bool = false
     script_path::Union{String, Nothing} = nothing
+    host_name::String = ""
+    port::Int = 3443
     sessions::Dict{Cint, Session} = Dict{Ptr{Cvoid}, Session}()
     fd_read ::Int32 = -1
     fd_write::Int32 = -1
@@ -236,6 +245,7 @@ end
     verbose::Bool = false
     dev_mode::Bool = false
     ipc_connection::Union{TCPSocket, Nothing} = nothing
+    dry_run_error::Union{RerunError, Nothing} = nothing
 end
 
 g = Global()
@@ -252,6 +262,28 @@ macro once(def)
             Magic.USER_TYPES[$(QuoteNode(struct_name))] = $struct_name
         end
     end)
+end
+
+function get_rerun_error(e::Exception)::RerunError
+    bt = catch_backtrace()
+    frames = filtered_stacktrace(bt)
+    message = remove_lines_starting_with(sprint(showerror, e), "in expression starting")
+    strace = sprint(Base.show_backtrace, frames)
+    return RerunError(message, strace)
+end
+
+function print_rerun_error(err::RerunError)::Nothing
+    println(stderr, err.message)
+    println(stderr, err.stacktrace)
+    return nothing
+end
+
+function display_rerun_error(err::RerunError)::Nothing
+    column(gap=".3em", padding="1em", margin="0 0 2rem 0", fill_width=true, css=Dict("font-family" => "monospace", "white-space" => "pre", "background" => "#fdeded", "color" => "#89454a", "overflow-x" => "auto")) do
+        html("span", err.message)
+        html("span", err.stacktrace)
+    end
+    return nothing
 end
 
 function get_dyn_lib_path()::String
@@ -1845,88 +1877,94 @@ function rerun(client_id::Cint, payload::Dict)::Task
         task.layout = Containers()
         task.layout.main_area = root_interface
 
-        # Handle events
-        #------------------
-        for widget in values(session.widgets)
-            widget.clicked = false
-            if widget.kind == WidgetKind_Button
-                widget.value = false
-            end
-            if widget.fragment_id == fragment_id
-                widget.alive = false
-            end
-        end
+        if g.dry_run_error !== nothing
+            display_rerun_error(g.dry_run_error)
+        else
+            g.dry_run_error = nothing
 
-        # TODO: Although we receive a list of events from the front-end, at the
-        # moment we don't expect it to have more than one event.
-        for front_event in payload["events"]
-            widget = session.widgets[front_event["widget_id"]]
-            if front_event["type"] == "click"
-                widget.clicked = true
+            # Handle events
+            #------------------
+            for widget in values(session.widgets)
+                widget.clicked = false
                 if widget.kind == WidgetKind_Button
-                    widget.value = true
-                    invokelatest(widget.onclick, widget.args...)
+                    widget.value = false
                 end
-            elseif front_event["type"] == "change"
-                if widget.kind == WidgetKind_Checkboxes
-                    if widget.props["multiple"]
+                if widget.fragment_id == fragment_id
+                    widget.alive = false
+                end
+            end
+
+            # TODO: Although we receive a list of events from the front-end, at the
+            # moment we don't expect it to have more than one event.
+            for front_event in payload["events"]
+                widget = session.widgets[front_event["widget_id"]]
+                if front_event["type"] == "click"
+                    widget.clicked = true
+                    if widget.kind == WidgetKind_Button
+                        widget.value = true
+                        invokelatest(widget.onclick, widget.args...)
+                    end
+                elseif front_event["type"] == "change"
+                    if widget.kind == WidgetKind_Checkboxes
+                        if widget.props["multiple"]
+                            widget.value = front_event["new_value"]
+                        else
+                            widget.value = (length(front_event["new_value"]) > 0)
+                        end
+                        invokelatest(widget.onchange, widget.args...)
+                    elseif widget.kind == WidgetKind_Selectbox || widget.kind == WidgetKind_Radio || widget.kind == WidgetKind_TextInput || widget.kind == WidgetKind_ColorPicker
                         widget.value = front_event["new_value"]
-                    else
-                        widget.value = (length(front_event["new_value"]) > 0)
-                    end
-                    invokelatest(widget.onchange, widget.args...)
-                elseif widget.kind == WidgetKind_Selectbox || widget.kind == WidgetKind_Radio || widget.kind == WidgetKind_TextInput || widget.kind == WidgetKind_ColorPicker
-                    widget.value = front_event["new_value"]
-                    invokelatest(widget.onchange, widget.args...)
-                elseif widget.kind == WidgetKind_DataFrame
-                    for change in front_event["changes"]
-                        column_config = widget.props["column_config"][change["column_name"]]
-                        new_value = change["new_value"]
+                        invokelatest(widget.onchange, widget.args...)
+                    elseif widget.kind == WidgetKind_DataFrame
+                        for change in front_event["changes"]
+                            column_config = widget.props["column_config"][change["column_name"]]
+                            new_value = change["new_value"]
 
-                        if column_config["type"] == "Number" && !(new_value in ["", nothing])
-                            if column_config["julia_type"] <: Integer
-                                new_value = round(column_config["julia_type"], new_value)
+                            if column_config["type"] == "Number" && !(new_value in ["", nothing])
+                                if column_config["julia_type"] <: Integer
+                                    new_value = round(column_config["julia_type"], new_value)
+                                end
                             end
+
+                            if (column_config["type"] == "Number" && (new_value == "" || new_value == nothing)) ||
+                            (column_config["type"] == "String" && (new_value == nothing))
+                                if column_config["empty_value"] == "<nothing>"
+                                    new_value = nothing
+                                elseif column_config["empty_value"] == "<missing>"
+                                    new_value = missing
+                                else
+                                    new_value = column_config["empty_value"]
+                                end
+                            end
+
+                            row_changes = get!(widget.changes, change["row_index"], Dict{String, Any}())
+                            row_changes[change["column_name"]] = new_value
+
+                            widget.value[change["row_index"], change["column_name"]] = new_value
                         end
 
-                        if (column_config["type"] == "Number" && (new_value == "" || new_value == nothing)) ||
-                           (column_config["type"] == "String" && (new_value == nothing))
-                            if column_config["empty_value"] == "<nothing>"
-                                new_value = nothing
-                            elseif column_config["empty_value"] == "<missing>"
-                                new_value = missing
-                            else
-                                new_value = column_config["empty_value"]
-                            end
-                        end
-
-                        row_changes = get!(widget.changes, change["row_index"], Dict{String, Any}())
-                        row_changes[change["column_name"]] = new_value
-
-                        widget.value[change["row_index"], change["column_name"]] = new_value
+                        invokelatest(widget.onchange, widget.args...)
                     end
-
-                    invokelatest(widget.onchange, widget.args...)
                 end
+            end
+
+            # Run user fragment
+            #-------------------
+            invokelatest(frag.func)
+
+            # Remove dead widgets
+            #-------------------------
+            filter!(p -> p.second.alive, session.widgets)
+
+            g.first_pass = false
+            session.first_pass = false
+            page = get_current_page()
+            if page !== missing
+                page.first_pass = false
             end
         end
 
-        # Run user fragment
-        #-------------------
-        invokelatest(frag.func)
-
-        # Remove dead widgets
-        #-------------------------
-        filter!(p -> p.second.alive, session.widgets)
-
-        g.first_pass = false
-        session.first_pass = false
-        page = get_current_page()
-        if page !== missing
-            page.first_pass = false
-        end
-
-        if (payload["request_id"] != 0)
+        if payload["request_id"] != 0
             put!(g.internal_events, InternalEvent(InternalEventType_Task, task))
         end
 
@@ -1934,19 +1972,9 @@ function rerun(client_id::Cint, payload::Dict)::Task
         task = task_local_storage("app_task")
 
         if !task.session.client_left
-            bt = catch_backtrace()
-
-            frames = filtered_stacktrace(bt)
-            err_message = remove_lines_starting_with(sprint(showerror, e), "in expression starting")
-            st = sprint(Base.show_backtrace, frames)
-
-            println(stderr, err_message)
-            println(stderr, st)
-
-            column(gap=".3em", padding="1em", margin="0 0 2rem 0", fill_width=true, css=Dict("font-family" => "monospace", "white-space" => "pre", "background" => "#fdeded", "color" => "#89454a", "overflow-x" => "auto")) do
-                html("span", err_message)
-                html("span", st)
-            end
+            session.rerun_error = get_rerun_error(e)
+            print_rerun_error(session.rerun_error)
+            display_rerun_error(session.rerun_error)
 
             filter!(p -> p.second.alive, task.session.widgets)
             put!(g.internal_events, InternalEvent(InternalEventType_Task, task))
@@ -2098,6 +2126,92 @@ function return_invalid_request(client_id::Cint, request_id::Int)::Nothing
     return nothing
 end
 
+function execute_dry_runs()::Bool
+    g.dry_run_error = nothing
+
+    dry_run_payload = Dict(
+        "type" => "request_rerun",
+        "request_id" => 0,
+        "events" => [],
+        "location" => Dict(
+            "href" => "https://$(g.host_name):$(g.port)",
+            "pathname" => "",
+            "host" => "$(g.host_name):$(g.port)",
+            "hostname" => g.host_name,
+            "search" => ""
+        )
+    )
+
+    handle_new_client(Cint(0))
+    add_page("/", title="Magic App", description="Magic App")
+
+    @info "Dry Run: First pass over '$(g.script_path)'.\n$(AC_Green("@app_startup")) code blocks will run now."
+    wait(rerun(Cint(0), dry_run_payload))
+
+    if is_app_first_pass()
+        @error "Dry run of app '$(g.script_path)' failed."
+        g.dry_run_error = g.sessions[Cint(0)].rerun_error
+    else
+        if length(g.pages) > 1
+            popfirst!(g.pages)
+        end
+
+        for page in g.pages
+            @info "Dry Run: First pass over '$(g.script_path)' as if loading page '$(page.uris[1])'.\n$(AC_Green("@page_startup")) code blocks will run now."
+            g.sessions[Cint(0)].first_pass = true
+
+            dry_run_payload["location"]["href"] = "https://$(g.host_name):$(g.port)" * page.uris[1]
+            dry_run_payload["location"]["pathname"] = page.uris[1]
+
+            wait(rerun(Cint(0), dry_run_payload))
+
+            if page.first_pass
+                @error "Dry run of page '$(page.uris[1])' failed."
+                g.dry_run_error = g.sessions[Cint(0)].rerun_error
+                break
+            end
+        end
+    end
+
+    handle_client_left(Cint(0))
+
+    if g.dry_run_error !== nothing
+        g.first_pass = true
+        g.pages = Vector{PageConfig}()
+        return false
+    else
+        g.dry_run_error = nothing
+        return true
+    end
+end
+
+function create_static_pages()::Nothing
+    create_page_html(g.base_page_config, ".Magic/served-files/generated/app/pages/base.html")
+
+    for page in g.pages
+        create_page_html(page, ".Magic/served-files/generated/app/pages/$(page.id).html")
+    end
+
+    clear_uri_mapping()
+
+    if length(g.pages) > 0
+        # User explicitly configured app pages
+        for page in g.pages
+            for uri in page.uris
+                push_uri_mapping(uri, replace(page.file_path, ".Magic/served-files" => ""))
+            end
+        end
+    else
+        push_uri_mapping("/", replace(g.base_page_config.file_path, ".Magic/served-files" => ""))
+    end
+
+    # Create 404.html
+    #-------------------
+    create_404_html(".Magic/served-files/generated/app/pages/404.html")
+
+    return nothing
+end
+
 function start_app(
     script_path::String="app.jl";
     host_name::String="localhost",
@@ -2126,58 +2240,8 @@ function start_app(
     g.first_pass = true
     g.initialized = true
     g.script_path = joinpath(START_CWD, script_path)
-
-    try_rm(".Magic/served-files/generated", recursive=true, force=true)
-    mkpath(".Magic/served-files/generated/app/pages")
-
-    g.base_page_config.title = "Magic App"
-    g.base_page_config.description = "Web app made with Magic.jl"
-
-    # Dry run to try and initialize the app
-    #-------------------------------------------
-    dry_run_payload = Dict(
-        "type" => "request_rerun",
-        "request_id" => 0,
-        "events" => [],
-        "location" => Dict(
-            "href" => "https://$(host_name):$(port)",
-            "pathname" => "",
-            "host" => "$(host_name):$(port)",
-            "hostname" => host_name, "search" => ""
-        )
-    )
-
-    handle_new_client(Cint(0))
-    add_page("/", title="Magic App", description="Magic App")
-
-    @info "Dry Run: First pass over '$(script_path)'.\n$(AC_Green("@app_startup")) code blocks will run now."
-    wait(rerun(Cint(0), dry_run_payload))
-
-    if is_app_first_pass()
-        @error "Dry run of app '$(script_path)' failed."
-        return
-    end
-
-    if length(g.pages) > 1
-        popfirst!(g.pages)
-    end
-
-    for page in g.pages
-        @info "Dry Run: First pass over '$(script_path)' as if loading page '$(page.uris[1])'.\n$(AC_Green("@page_startup")) code blocks will run now."
-        g.sessions[Cint(0)].first_pass = true
-
-        dry_run_payload["location"]["href"] = "https://$(host_name):$(port)" * page.uris[1]
-        dry_run_payload["location"]["pathname"] = page.uris[1]
-
-        wait(rerun(Cint(0), dry_run_payload))
-
-        if page.first_pass
-            @error "Dry run of page '$(page.uris[1])' failed."
-            return
-        end
-    end
-
-    handle_client_left(Cint(0))
+    g.host_name = host_name
+    g.port = port
 
     # Setup net layer connection
     #--------------------------------
@@ -2191,42 +2255,28 @@ function start_app(
     end
 
     init_net_layer(host_name, port, docs_path, Int(ipc_port), joinpath(@__DIR__, ".."), g.verbose, g.dev_mode)
-
     g.ipc_connection = accept(ipc_server)
-    @info "NetLayerStarted\nNow serving at http://$(host_name):$(port)"
-
-    cp(joinpath(@__DIR__, "../served-files/MagicPageTemplate.html"), ".Magic/served-files/generated/app/pages/first.html", force=true)
     push_uri_mapping("/", "/generated/app/pages/first.html")
 
-    # Configure pages after dry runs
-    #---------------------
-    create_page_html(g.base_page_config, ".Magic/served-files/generated/app/pages/base.html")
+    # Generate directories and files
+    #-----------------------------------
+    try_rm(".Magic/served-files/generated", recursive=true, force=true)
+    mkpath(".Magic/served-files/generated/app/pages")
+    cp(joinpath(@__DIR__, "../served-files/MagicPageTemplate.html"), ".Magic/served-files/generated/app/pages/first.html", force=true)
 
-    for page in g.pages
-        create_page_html(page, ".Magic/served-files/generated/app/pages/$(page.id).html")
+    g.base_page_config.title = "Magic App"
+    g.base_page_config.description = "Web app made with Magic.jl"
+
+    if execute_dry_runs()
+        create_static_pages()
     end
-
-    clear_uri_mapping()
-
-    if length(g.pages) > 0
-        # User explicitly configured app pages
-        for page in g.pages
-            for uri in page.uris
-                push_uri_mapping(uri, replace(page.file_path, ".Magic/served-files" => ""))
-            end
-        end
-    else
-        push_uri_mapping("/", replace(g.base_page_config.file_path, ".Magic/served-files" => ""))
-    end
-
-    # Create 404.html
-    #-------------------
-    create_404_html(".Magic/served-files/generated/app/pages/404.html")
 
     # Net-layer IPC listener loop.
     # When a net-layer event happens, it forwards the event to the App-layer
     # loop by pushing the event to the `internal_events` channel.
     #---------------------------------------------------------------------------
+    @info "NetLayerStarted\nNow serving at http://$(host_name):$(port)"
+
     Threads.@spawn begin
         stop_loop = false
 
@@ -2276,7 +2326,20 @@ function start_app(
                     if payload["type"] == "request_rerun"
                         if !session.waiting_invalid_state_ack
                             rerun_request = RerunRequest(payload)
-                            if session.rerun_task === nothing
+
+                            if g.dry_run_error !== nothing
+                                if execute_dry_runs()
+                                    create_static_pages()
+                                    session.refresh = true
+                                end
+                            end
+
+                            if session.refresh
+                                payload_string = JSON.json(Dict("type" => "please_refresh"))
+                                app_event = create_app_event(AppEventType_NewPayload, session.client_id, payload_string)
+                                push_app_event(app_event)
+                                write(g.ipc_connection, " ")
+                            elseif session.rerun_task === nothing
                                 if is_rerun_request_valid(session, rerun_request)
                                     rerun(ev.data.client_id, payload)
                                 else
@@ -2316,7 +2379,6 @@ function start_app(
                         payload_string = JSON.json(payload)
                         app_event = create_app_event(AppEventType_NewPayload, session.client_id, payload_string)
                         push_app_event(app_event)
-
                         write(g.ipc_connection, " ")
 
                         session.rerun_task = nothing

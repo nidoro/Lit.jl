@@ -865,6 +865,8 @@ async function wsOnMessage(event) {
             }
             ackInvalidState();
         }
+    } else if (msg.type == "please_refresh") {
+        location.reload();
     }
 }
 
