@@ -173,11 +173,11 @@ struct StopTask <: Exception end
     layout::Containers = Containers()
 end
 
-const NetEventType            = Cint
-const NetEventType_None       = Cint(0)
-const NetEventType_NewClient  = Cint(1)
-const NetEventType_ClientLeft = Cint(2)
-const NetEventType_NewPayload = Cint(3)
+const NetEventType                       = Cint
+const NetEventType_None                  = Cint(0)
+const NetEventType_NewClient             = Cint(1)
+const NetEventType_ClientLeft            = Cint(2)
+const NetEventType_NewPayload            = Cint(3)
 const NetEventType_ServerLoopInterrupted = Cint(4)
 
 @with_kw mutable struct NetEvent
@@ -2368,6 +2368,7 @@ function start_app(
     # Generate directories and files
     #-----------------------------------
     try_rm(".Magic/served-files/generated", recursive=true, force=true)
+    try_rm(".Magic/uploaded-files", recursive=true, force=true)
     mkpath(".Magic/served-files/generated/app/pages")
     cp(joinpath(@__DIR__, "../served-files/MagicPageTemplate.html"), ".Magic/served-files/generated/app/pages/first.html", force=true)
 

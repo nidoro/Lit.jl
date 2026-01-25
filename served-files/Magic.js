@@ -55,6 +55,21 @@ function ackInvalidState() {
     });
 }
 
+async function uplChange(elem, oldValue, newValue) {
+    for (const file of newValue) {
+        const endpoint = `/.Magic/uploaded-files/${g.sessionId}?file_name=${file.name}&type=${file.type}`;
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': file.type || 'application/octet-stream',
+            },
+            body: file.arrayBuffer
+        });
+
+        console.log(await response.json());
+    }
+}
+
 function btnClick(event) {
     requestUpdate([{
         type: "click",
@@ -711,6 +726,7 @@ function createAppElement(parent, props, fragmentId) {
 
         if (!elem) {
             elem = document.createElement("dd-file-uploader");
+            elem.setAttribute("dd-onchange", "uplChange()");
             applyCSS(elem, props.css);
 
             elem.innerHTML = `

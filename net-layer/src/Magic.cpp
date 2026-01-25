@@ -3,6 +3,8 @@
 #include "DD_HTTPS.h"
 #include "DD_LogUtils.h"
 #include "DD_SignalUtils.h"
+#include "DD_StringUtils.h"
+#include "DD_FileUtils.h"
 #include "DD_RandomUtils.h" // TODO: DD_RandomUtils is not cross-platform!
 
 #ifdef _WIN32
@@ -28,6 +30,7 @@
 #endif
 
 #define MG_SESSION_ID_SIZE 32-1
+#define MG_FILE_ID_SIZE 32-1
 
 extern "C" {
 
@@ -130,6 +133,11 @@ void MG_GenSessionId(char* output) {
     }
 }
 
+void MG_GenFileId(char* output) {
+    RU_GenerateRandomString(output, MG_FILE_ID_SIZE, RU_CHAR_SET_ALPHA_NUM);
+    memcpy(output, "file_", 5);
+}
+
 MG_API void MG_WakeUpAppLayer() {
 #ifdef _WIN32
     int sent = send(g.fdSocket, "x", 1, 0);
@@ -147,8 +155,18 @@ MG_API void MG_WakeUpAppLayer() {
 
 MG_API MG_Client* MG_GetClient(int id) {
     for (int i = 0; i < arrcount(g.clients); ++i) {
-        if (g.clients[i]->id == id)
+        if (g.clients[i]->id == id) {
             return g.clients[i];
+        }
+    }
+    return 0;
+}
+
+MG_Client* MG_GetClientBySessionId(char* sessionId) {
+    for (int i = 0; i < arrcount(g.clients); ++i) {
+        if (SU_AreStringsEqual(g.clients[i]->sessionId, sessionId)) {
+            return g.clients[i];
+        }
     }
     return 0;
 }
@@ -254,30 +272,30 @@ MG_API MG_AppEvent MG_PopAppEvent() {
 }
 
 MG_API void MG_LockClient(int clientId) {
-    MG_Client* wcClient = MG_GetClient(clientId);
-    if (wcClient) {
-        pthread_mutex_lock(wcClient->mutex);
+    MG_Client* mgClient = MG_GetClient(clientId);
+    if (mgClient) {
+        pthread_mutex_lock(mgClient->mutex);
     }
 }
 
 MG_API void MG_UnlockClient(int clientId) {
-    MG_Client* wcClient = MG_GetClient(clientId);
-    if (wcClient) {
-        pthread_mutex_unlock(wcClient->mutex);
+    MG_Client* mgClient = MG_GetClient(clientId);
+    if (mgClient) {
+        pthread_mutex_unlock(mgClient->mutex);
     }
 }
 
 MG_API int MG_ProcessIncomingMessage(HS_CallbackArgs* args) {
-    MG_Client* wcClient = HS_GetClientData(MG_Client, args);
+    MG_Client* mgClient = HS_GetClientData(MG_Client, args);
 
-    LU_Log(LU_Debug, "IncomingMessage | Bytes: %d | Payload: %.*s", wcClient->readSize, wcClient->readSize, wcClient->readBuffer);
+    LU_Log(LU_Debug, "IncomingMessage | Bytes: %d | Payload: %.*s", mgClient->readSize, mgClient->readSize, mgClient->readBuffer);
 
     MG_NetEvent ev = MG_CreateNetEvent(
         MG_NetEventType_NewPayload,
-        wcClient->id,
-        wcClient->sessionId,
-        wcClient->readBuffer,
-        wcClient->readSize
+        mgClient->id,
+        mgClient->sessionId,
+        mgClient->readBuffer,
+        mgClient->readSize
     );
 
     MG_PushNetEvent(ev);
@@ -287,30 +305,106 @@ MG_API int MG_ProcessIncomingMessage(HS_CallbackArgs* args) {
     return 0;
 }
 
-MG_API int HS_CALLBACK(handleEvent, args) {
+MG_API int HS_CALLBACK(MG_PostRequestChecker, args) {
+    HS_HTTPClient* client = HS_GetHTTPClientData(args);
+
+    LU_Log(LU_Debug, "MG_PostRequestChecker");
+
+    char ignore[PATH_MAX] = {};
+    char sessionId[PATH_MAX] = {};
+
+    if (SU_StartsWith(client->uri, "/.Magic/uploaded-files/")) {
+        char* nodes[] = {ignore, ignore, sessionId};
+        HS_GetPathNodes(client->uri, nodes);
+        MG_Client* mgClient = MG_GetClientBySessionId(sessionId);
+
+        if (mgClient) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    return 0;
+}
+
+const char* MG_GetExtension(const char* fileName, bool withDot=true) {
+    const char* dot = strrchr(fileName, '.');
+    if (!dot || dot == fileName) {
+        return "";
+    }
+    if (withDot) return dot;
+    return dot + 1;
+}
+
+MG_API int HS_CALLBACK(MG_PostRequestHandler, args) {
+    HS_HTTPClient* client = HS_GetHTTPClientData(args);
+
+    char ignore[PATH_MAX] = {};
+    char sessionId[PATH_MAX] = {};
+    char fileId[MG_FILE_ID_SIZE+1] = {};
+    char filePath[PATH_MAX] = {};
+    char fileName[PATH_MAX] = {};
+
+    if (SU_StartsWith(client->uri, "/.Magic/uploaded-files/")) {
+        char* nodes[] = {ignore, ignore, sessionId};
+        HS_GetPathNodes(client->uri, nodes);
+        MG_Client* mgClient = MG_GetClientBySessionId(sessionId);
+
+        if (mgClient) {
+            HS_GetQueryStringValue(client, "file_name", fileName, sizeof(fileName));
+            if (!SU_IsEmpty(fileName)) {
+                LU_Log(LU_Debug, "MG_PostRequestHandler | Session=%s | PayloadSize=%d", sessionId, client->receivedSize);
+
+                MG_GenFileId(fileId);
+                const char* ext = MG_GetExtension(fileName);
+                sprintf(filePath, "%s/%s%s", client->uri+1, fileId, ext);
+                FU_WriteEntireFile(filePath, client->receivedBuffer, client->receivedSize);
+
+                HS_InitResponseBuffer(client, 512);
+                client->fileSize = sprintf(client->fileContent, R"({"file_id": "%s"})", fileId);
+                HS_AddHTTPHeaderStatus(client, 200);
+                HS_AddHTTPHeader(client, WSI_TOKEN_HTTP_CONTENT_LENGTH, client->fileSize);
+                HS_AddHTTPHeader(client, WSI_TOKEN_HTTP_CONTENT_TYPE, "application/json");
+                HS_AddHTTPHeader(client, WSI_TOKEN_HTTP_CACHE_CONTROL, "no-cache, no-store, must-revalidate");
+                HS_WriteResponse(client);
+
+                return 0;
+            } else {
+                return 1;
+            }
+        } else {
+            return 1;
+        }
+    }
+
+    return 1;
+}
+
+MG_API int HS_CALLBACK(MG_WSEventsHandler, args) {
     HS_VHost* vhost = HS_GetVHost(args->socket);
-    MG_Client* wcClient = HS_GetClientData(MG_Client, args);
+    MG_Client* mgClient = HS_GetClientData(MG_Client, args);
 
     LU_Log(LU_Debug, "HandleLWSEvent | %s", HS_ToString(args->reason));
 
     switch (args->reason) {
         case LWS_CALLBACK_RECEIVE: {
-            HS_ReceiveMessageFragment(args, &wcClient->readBuffer, &wcClient->readSize, &wcClient->readCap, MG_ProcessIncomingMessage);
+            HS_ReceiveMessageFragment(args, &mgClient->readBuffer, &mgClient->readSize, &mgClient->readCap, MG_ProcessIncomingMessage);
         } break;
 
         case LWS_CALLBACK_SERVER_WRITEABLE: {
-            HS_WriteNextPacket(&wcClient->writeQueue);
+            HS_WriteNextPacket(&mgClient->writeQueue);
         } break;
 
         case LWS_CALLBACK_ESTABLISHED: {
-            wcClient->id = g.nextClientId++;
-            MG_GenSessionId(wcClient->sessionId);
-            wcClient->writeQueue = HS_CreatePacketQueue(args->socket, 128);
-            wcClient->mutex = (pthread_mutex_t*) malloc(sizeof(pthread_mutex_t));
-            pthread_mutex_init(wcClient->mutex, 0);
-            arradd(g.clients, wcClient);
+            mgClient->id = g.nextClientId++;
+            MG_GenSessionId(mgClient->sessionId);
+            mgClient->writeQueue = HS_CreatePacketQueue(args->socket, 128);
+            mgClient->mutex = (pthread_mutex_t*) malloc(sizeof(pthread_mutex_t));
+            pthread_mutex_init(mgClient->mutex, 0);
+            arradd(g.clients, mgClient);
 
-            MG_NetEvent ev = MG_CreateNetEvent(MG_NetEventType_NewClient, wcClient->id, wcClient->sessionId, 0, 0);
+            MG_NetEvent ev = MG_CreateNetEvent(MG_NetEventType_NewClient, mgClient->id, mgClient->sessionId, 0, 0);
             MG_PushNetEvent(ev);
             MG_WakeUpAppLayer();
         } break;
@@ -327,14 +421,14 @@ MG_API int HS_CALLBACK(handleEvent, args) {
         case LWS_CALLBACK_CLOSED: {
             MG_PushNetEvent({
                 .type = MG_NetEventType_ClientLeft,
-                .clientId = wcClient->id,
+                .clientId = mgClient->id,
             });
 
             MG_WakeUpAppLayer();
 
-            pthread_mutex_lock(wcClient->mutex);
-            arrremovematch(g.clients, wcClient);
-            free(wcClient->mutex);
+            pthread_mutex_lock(mgClient->mutex);
+            arrremovematch(g.clients, mgClient);
+            free(mgClient->mutex);
         } break;
 
         case LWS_CALLBACK_RAW_RX: {
@@ -343,9 +437,9 @@ MG_API int HS_CALLBACK(handleEvent, args) {
 
             while (arrcount(g.appEvents)) {
                 MG_AppEvent ev = MG_PopAppEvent();
-                wcClient = MG_GetClient(ev.clientId);
+                mgClient = MG_GetClient(ev.clientId);
 
-                if (wcClient) {
+                if (mgClient) {
                     if (ev.type == MG_AppEventType_NewPayload) {
                         LU_Log(LU_Debug, "AppEventType_NewPayload | %d | %.*s", ev.clientId, MIN(ev.payloadSize-LWS_PRE, 256), ev.payload+LWS_PRE);
 
@@ -356,13 +450,13 @@ MG_API int HS_CALLBACK(handleEvent, args) {
                             .bodySize = ev.payloadSize-LWS_PRE,
                         };
 
-                        HS_SendPacket(&wcClient->writeQueue, packet);
+                        HS_SendPacket(&mgClient->writeQueue, packet);
                         MG_DestroyAppEvent(ev);
                     } else {
                         DD_Assert2(0, "Unknown event %d", ev.type);
                     }
                 } else {
-                    // TODO: What to do if wcClient is no longer online?
+                    // TODO: What to do if mgClient is no longer online?
                 }
             }
         } break;
@@ -456,7 +550,9 @@ MG_API void* MG_RunServer(void*) {
     HS_SetLWSVHostConfig(&g.hserver, "magic-app", pt_serv_buf_size, HS_KILO_BYTES(12));
     HS_SetLWSProtocolConfig(&g.hserver, "magic-app", "HTTP", rx_buffer_size, HS_KILO_BYTES(12));
     HS_SetHTTPGetHandler(&g.hserver, "magic-app", HS_GetFileByURI);
-    HS_AddProtocol(&g.hserver, "magic-app", "ws", handleEvent, MG_Client);
+    HS_SetHTTPPostEndpointChecker(&g.hserver, "magic-app", MG_PostRequestChecker);
+    HS_SetHTTPPostHandler(&g.hserver, "magic-app", MG_PostRequestHandler);
+    HS_AddProtocol(&g.hserver, "magic-app", "ws", MG_WSEventsHandler, MG_Client);
     HS_PushCacheBust(&g.hserver, "magic-app", "*.html");
     HS_PushCacheControlMapping(&g.hserver, "magic-app", "*.html", "no-cache, no-store, must-revalidate");
     HS_PushCacheControlMapping(&g.hserver, "magic-app", "/*", "max-age=2592000");
