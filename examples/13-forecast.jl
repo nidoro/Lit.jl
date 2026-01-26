@@ -125,7 +125,7 @@ end
 
 function update_map()
     session = get_session_data()
-    session.img_path = gen_resource_path("png")
+    session.img_path = gen_serveable_path("png")
     plot_map(session.data, session.img_path)
 end
 

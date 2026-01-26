@@ -99,11 +99,24 @@ const WidgetKind_FileUploader   = 10
     dataframe::Function = (args...; kwargs...)->()
     checkbox::Function = (args...; kwargs...)->()
     checkboxes::Function = (args...; kwargs...)->()
+    selectbox::Function = (args...; kwargs...)->()
+    radio::Function = (args...; kwargs...)->()
+    file_uploader::Function = (args...; kwargs...)->()
+    text_input::Function = (args...; kwargs...)->()
+    link::Function = (args...; kwargs...)->()
+    color_picker::Function = (args...; kwargs...)->()
+    text::Function = (args...; kwargs...)->()
+    metric::Function = (args...; kwargs...)->()
+    code::Function = (args...; kwargs...)->()
+    icon::Function = (args...; kwargs...)->()
+    space::Function = (args...; kwargs...)->()
 end
 
 CONTAINER_INTERFACE_FUNCS = [
-    :columns, :column, :row, :button, :image, :html,
-    :h1, :h2, :h3, :h4, :h5, :h6, :dataframe, :checkbox, :checkboxes
+    :columns, :column, :row, :button, :image, :html, :radio, :selectbox,
+    :h1, :h2, :h3, :h4, :h5, :h6, :dataframe, :checkbox, :checkboxes,
+    :file_uploader, :text_input, :link, :color_picker, :text, :metric, :code,
+    :icon, :space
 ]
 
 function (container_interface::ContainerInterface)(inner_func::Function)::Nothing

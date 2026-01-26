@@ -144,7 +144,7 @@ end
             }
         )
 
-    chart_path = gen_resource_path("png")
+    chart_path = gen_serveable_path("png")
     save(chart_path, chart)
 
     cols[1].h6("Temperature")
@@ -172,7 +172,7 @@ end
             view={stroke=:transparent},
         )
 
-    chart_path = gen_resource_path("png")
+    chart_path = gen_serveable_path("png")
     save(chart_path, chart)
 
     cols[2].h6("Weather Distribution")
@@ -214,7 +214,7 @@ end
             }
         )
 
-    chart_path = gen_resource_path("png")
+    chart_path = gen_serveable_path("png")
     save(chart_path, chart)
 
     cols[1].h6("Wind")
@@ -254,7 +254,7 @@ end
             }
         )
 
-    chart_path = gen_resource_path("png")
+    chart_path = gen_serveable_path("png")
     save(chart_path, chart)
 
     cols[2].h6("Precipitation")
@@ -286,7 +286,7 @@ end
                 }
             )
 
-    chart_path = gen_resource_path("png")
+    chart_path = gen_serveable_path("png")
     save(chart_path, chart)
 
     cols[1].h6("Monthly Weather Breakdown")
