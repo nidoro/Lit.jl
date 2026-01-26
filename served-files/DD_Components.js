@@ -3054,7 +3054,7 @@ class DD_FileUploader extends DD_Button {
         }
 
         this.initializeButton();
-        if (this.hasAttribute("dd-accept")) this.input.setAttribute("accept", this.getAttribute("accept"));
+        if (this.hasAttribute("dd-accept")) this.input.setAttribute("accept", this.getAttribute("dd-accept"));
         this.appendChild(this.input);
     }
 

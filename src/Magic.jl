@@ -1472,6 +1472,7 @@ function create_file_uploader(
     parent::Dict,
     user_id::Any,
     label::String,
+    types::Vector{String},
     multiple::Bool,
     onchange::Function,
     args::Vector,
@@ -1482,6 +1483,7 @@ function create_file_uploader(
         "type" => "file_uploader",
         "user_id" => user_id,
         "label" => label,
+        "types" => types,
         "multiple" => multiple,
         "css" => css,
     )
@@ -1516,7 +1518,7 @@ end
 
 function file_uploader(
     label::String;
-    formats::Vector{String}=Vector{String}(),
+    types::Vector{String}=Vector{String}(),
     multiple::Bool=false,
     fill_width::Bool=false,
     show_label::Bool=true,
@@ -1541,7 +1543,7 @@ function file_uploader(
 
     merge!(css, container_css)
 
-    return create_file_uploader(widgets, parent, id, label, multiple, onchange, args, css)
+    return create_file_uploader(widgets, parent, id, label, types, multiple, onchange, args, css)
 end
 
 # HTML

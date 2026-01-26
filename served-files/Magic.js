@@ -809,6 +809,10 @@ function createAppElement(parent, props, fragmentId) {
             }
             elem.setAttribute("dd-onchange", "uplChange()");
             elem.classList.add("mg-file-uploader");
+            if (props.types.length) {
+                console.log(props.types);
+                elem.setAttribute("dd-accept", props.types.join(";"));
+            }
 
             applyCSS(elem, props.css);
 
