@@ -79,6 +79,7 @@ async function uplChange(elem, oldValue, newValue) {
     const mgFiles = [];
 
     for (const file of newValue) {
+        if (!file.supported) continue;
         const endpoint = `/.Magic/uploaded-files/${g.sessionId}?file_name=${file.name}&type=${file.type}`;
         const response = await fetch(endpoint, {
             method: 'POST',
@@ -810,8 +811,7 @@ function createAppElement(parent, props, fragmentId) {
             elem.setAttribute("dd-onchange", "uplChange()");
             elem.classList.add("mg-file-uploader");
             if (props.types.length) {
-                console.log(props.types);
-                elem.setAttribute("dd-accept", props.types.join(";"));
+                elem.setAttribute("dd-accept", props.types.join(","));
             }
 
             applyCSS(elem, props.css);

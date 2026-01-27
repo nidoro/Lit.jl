@@ -1,6 +1,6 @@
 using Magic
 
-@once mutable struct Item
+mutable struct Item
     name::String
     status::Bool
 end

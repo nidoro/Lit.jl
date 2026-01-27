@@ -7,6 +7,7 @@ using Magic
     add_page("/todo")
     add_page("/forecast")
     add_page("/seattle-weather")
+    add_page("/image-filters")
     add_page("/fragment-example")
 end
 
@@ -22,10 +23,13 @@ elseif is_on_page("/todo")
 elseif is_on_page("/avatar")
     page_script = "10-avatar.jl"
 elseif is_on_page("/forecast")
-    page_script = "13-forecast.jl"
+    #page_script = "13-forecast.jl"
     layout_style = "wide"
 elseif is_on_page("/seattle-weather")
-    page_script = "15-seattle-weather.jl"
+    #page_script = "15-seattle-weather.jl"
+    layout_style = "wide"
+elseif is_on_page("/image-filters")
+    page_script = "20-image-filters.jl"
     layout_style = "wide"
 elseif is_on_page("/fragment-example")
     page_script = "50-fragment-example.jl"
@@ -50,15 +54,13 @@ if is_on_page("/")
     end
 
     column(fill_width=true, align_items="center") do
-        row(align_items="center") do
-            image("/Magic.jl/images/magic-logo.svg", css=Dict("max-height" => "70px"))
-            h1("Magic.jl Demo Apps")
-        end
+        image("/Magic.jl/images/magic-logo-and-text.svg", css=Dict("max-height" => "100px"))
 
-        space(height="1rem")
-
+        h5("Demo Apps")
         text("A few simple apps that showcase Magic.jl features!")
-        text("Each one contains its own source code for you to explore.")
+        text("Each one contains its own source code on the right sidebar for you to explore.")
+
+        space(height=".5rem")
 
         cols = columns(2, show_border=true, padding=".8rem", justify_content="space-between")
 
@@ -113,13 +115,14 @@ end
 left_sidebar() do
     column(fill_width=true, gap="0px") do
         space(height="3rem")
-        h5("Magic.jl Demo Apps", css=Dict("margin" => "0 0 .8rem .8rem", "white-space" => "nowrap", "color" => "#444"))
+        h5("Magic Demo Apps", css=Dict("margin" => "0 0 .8rem .8rem", "white-space" => "nowrap", "color" => "#444"))
         link("Overview", "/", style="naked", fill_width=true, css=Dict("justify-content" => "flex-start"))
         link("Counter", "/counter", style="naked", fill_width=true, css=Dict("justify-content" => "flex-start"))
         link("To-Do List", "/todo", style="naked", fill_width=true, css=Dict("justify-content" => "flex-start"))
         link("Avatar Creator", "/avatar", style="naked", fill_width=true, css=Dict("justify-content" => "flex-start"))
         link("Brazil Forecast", "/forecast", style="naked", fill_width=true, css=Dict("justify-content" => "flex-start"))
         link("Seattle Weather", "/seattle-weather", style="naked", fill_width=true, css=Dict("justify-content" => "flex-start"))
+        link("Image Filters", "/image-filters", style="naked", fill_width=true, css=Dict("justify-content" => "flex-start"))
     end
 end
 

@@ -20,7 +20,7 @@ is_app_first_pass, is_page_first_pass, is_session_first_pass,
 gen_serveable_path, make_serveable_copy, move_to_serveable_dir,
 fragment, @fragment, get_url_path, is_on_page, get_current_page, add_page,
 add_css_rule, add_font, begin_page_config, end_page_config, set_title,
-set_description
+set_description, UploadedFile
 
 using ArgParse
 using Libdl
@@ -255,6 +255,7 @@ end
     client_left::Bool = false
     rerun_error::Union{RerunError, Nothing} = nothing
     refresh::Bool = false
+    app_mod::Module = Module(:MagicApp)
 end
 
 @with_kw mutable struct Global
@@ -1737,7 +1738,7 @@ end
 function get_value(user_id::String)::Any
     task = task_local_storage("app_task")
     widget = get_widget_by_user_id(task.session.widgets, user_id)
-    if widget === missing || widget.value === nothing
+    if widget === missing
         return get_default_value(user_id)
     end
     return widget.value
@@ -1913,6 +1914,12 @@ function handle_new_client(client_id::Cint, session_id::String)::Nothing
 
     g.sessions[client_id] = session
 
+    Core.eval(session.app_mod, quote
+        using Base
+        using Core
+        const include = path -> Base.include(MagicApp, path)
+    end)
+
     mkpath(".Magic/served-files/generated/$(session_id)")
     mkpath(".Magic/uploaded-files/$(session_id)")
 
@@ -1972,13 +1979,8 @@ function create_404_html(output_path::String)::Nothing
 end
 
 function run_user_script()::Nothing
-    app_mod = Module(:MagicApp)
-    Core.eval(app_mod, quote
-        using Base
-        using Core
-        const include = path -> Base.include(MagicApp, path)
-    end)
-    Base.include(app_mod, g.script_path)
+    task = task_local_storage("app_task")
+    Base.include(task.session.app_mod, g.script_path)
     return nothing
 end
 
@@ -2326,11 +2328,12 @@ function execute_dry_runs()::Bool
         )
     )
 
-    handle_new_client(Cint(0), "0")
     add_page("/", title="Magic App", description="Magic App")
 
+    handle_new_client(Cint(0), "0")
     @info "Dry Run: First pass over '$(g.script_path)'.\n$(AC_Green("@app_startup")) code blocks will run now."
     wait(rerun(Cint(0), dry_run_payload))
+    handle_client_left(Cint(0))
 
     if is_app_first_pass()
         @error "Dry run of app '$(g.script_path)' failed."
@@ -2341,13 +2344,14 @@ function execute_dry_runs()::Bool
         end
 
         for page in g.pages
+            handle_new_client(Cint(0), "0")
             @info "Dry Run: First pass over '$(g.script_path)' as if loading page '$(page.uris[1])'.\n$(AC_Green("@page_startup")) code blocks will run now."
-            g.sessions[Cint(0)].first_pass = true
 
             dry_run_payload["location"]["href"] = "https://$(g.host_name):$(g.port)" * page.uris[1]
             dry_run_payload["location"]["pathname"] = page.uris[1]
 
             wait(rerun(Cint(0), dry_run_payload))
+            handle_client_left(Cint(0))
 
             if page.first_pass
                 @error "Dry run of page '$(page.uris[1])' failed."
@@ -2356,8 +2360,6 @@ function execute_dry_runs()::Bool
             end
         end
     end
-
-    handle_client_left(Cint(0))
 
     if g.dry_run_error !== nothing
         g.first_pass = true

@@ -3063,8 +3063,12 @@ class DD_FileUploader extends DD_Button {
             const accept = this.getAttribute("dd-accept");
             const acceptEntries = accept.split(",");
             for (const entry of acceptEntries) {
-                if (file.type == entry.trim() || file.name.endsWith(entry.trim())) {
-                    return true;
+                if (entry.startsWith(".")) {
+                    return file.name.endsWith(entry.trim());
+                } else if (entry.endsWith("*")) {
+                    return file.type.startsWith(entry.substring(0, entry.length-1));
+                } else {
+                    return file.type == entry.trim();
                 }
             }
             return false;
